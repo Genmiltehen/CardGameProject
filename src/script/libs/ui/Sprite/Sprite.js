@@ -131,13 +131,13 @@ export class Sprite {
 	/**
 	 *  @param {string} animationName
 	 *  @param {number} duration
-	 *  @param {number} repeat
-	 *  @param {boolean} switchToDeafult
+	 *  @param {spriteRepeatValues} [repeat]
+	 *  @param {("default"|"none")} [nextAnimation]
 	 */
-	playAnimation(animationName, duration, repeat = 1, switchToDeafult = true) {
+	playAnimation(animationName, duration, repeat = 1, nextAnimation = "default") {
 		if (animationName in this.data.animations) {
 			this.#setCssAnimation(animationName, duration, repeat);
-			if (switchToDeafult) {
+			if (repeat != "infinite" && nextAnimation == "default") {
 				window.setTimeout(this.playDefaultAnimation, repeat * duration * 1000);
 			}
 		} else throw new Error("no such animation found");
