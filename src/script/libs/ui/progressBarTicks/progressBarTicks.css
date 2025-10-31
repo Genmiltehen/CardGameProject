@@ -1,0 +1,46 @@
+.progressBarTicks {
+	position: absolute;
+	--primary-color: black;
+	--secondary-color: black;
+
+	--max-values: 0;
+	--value: 0;
+
+	--gap-val: 2px;
+
+	inset: var(--gap-val);
+
+	display: flex;
+	gap: var(--gap-val);
+}
+
+.progressBarTicks.vertical {
+	flex-direction: column-reverse;
+	/* grid-auto-flow: row; */
+	/* grid-template-columns: repeat(1fr, var(--max-values)); */
+	
+}
+
+.progressBarTicks.horizontal {
+	flex-direction: row;
+	/* grid-auto-flow: column; */
+	/* grid-template-rows: repeat(1fr, var(--max-values)); */
+}
+
+.tick.active {
+	--color: var(--primary-color);
+}
+
+.tick:not(.active) {
+	--color: var(--secondary-color);
+}
+
+.tick {
+	flex: 1;
+	background: linear-gradient(
+		var(--color),
+		var(--color) 80%,
+		hsl(from var(--color) h s calc(l * 0.5)) 80%,
+		hsl(from var(--color) h s calc(l * 0.5)) 100%
+	);
+}

@@ -1,0 +1,153 @@
+/* @font-face {
+  font-family: myFont; 
+  src: url(); 
+} */
+
+* {
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	font-size: 10px;
+	overflow: hidden;
+	--header-size: 3rem;
+	--footer-size: 10rem;
+
+	--side-one-w: 20rem;
+
+	background-color: black;
+}
+
+.noSmoothing {
+	image-rendering: optimizeSpeed; /* STOP SMOOTHING, GIVE ME SPEED  */
+	image-rendering: -moz-crisp-edges; /* Firefox                        */
+	image-rendering: -o-crisp-edges; /* Opera                          */
+	image-rendering: -webkit-optimize-contrast; /* Chrome (and eventually Safari) */
+	image-rendering: pixelated; /* Universal support since 2021   */
+	image-rendering: optimize-contrast; /* CSS3 Proposed                  */
+	-ms-interpolation-mode: nearest-neighbor; /* IE8+                           */
+}
+
+.noselect {
+	-webkit-touch-callout: none; /* iOS Safari */
+	-webkit-user-select: none; /* Safari */
+	-khtml-user-select: none; /* Konqueror HTML */
+	-moz-user-select: none; /* Old versions of Firefox */
+	-ms-user-select: none; /* Internet Explorer/Edge */
+	user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+}
+
+.test {
+	box-sizing: border-box;
+	border: 5px solid black;
+
+	text-align: center;
+	align-content: center;
+	font-family: "fira Code";
+	font-size: 50px;
+}
+
+.base {
+	width: 100vw;
+	height: 100vh;
+
+	display: grid;
+	grid-template-areas:
+		"header header header"
+		"side1 main side2"
+		"footer footer footer";
+
+	grid-template-columns: 0 auto 0;
+	grid-template-rows: var(--header-size) auto var(--footer-size);
+}
+
+.header {
+	grid-area: header;
+}
+
+.main {
+	grid-area: main;
+}
+
+.footer {
+	grid-area: footer;
+
+	border-style: solid;
+	border-width: 16px;
+
+	border-image: url("/src/assets/uiSprites/RectangleBox_96x96.png");
+	border-image-slice: 12 fill;
+	border-image-repeat: stretch;
+
+	position: relative;
+}
+
+button.draw,
+button.discard {
+	--brightness: 1;
+	filter: brightness(var(--brightness));
+	position: absolute;
+
+	background: transparent;
+	border: solid transparent 8px;
+	border-image: url("/src/assets/uiSprites/MenusBox_34x34.png") 8 fill stretch;
+	image-rendering: pixelated;
+
+	width: 100px;
+	height: 80px;
+
+	top: 50%;
+	transform: translate(-50%, -50%);
+
+	transition: all 25ms linear;
+
+	&:hover {
+		--brightness: 0.8;
+	}
+
+	&:active {
+		--brightness: 0.5;
+	}
+
+	&::after {
+		position: absolute;
+		inset: 0;
+
+		content: "";
+		border: solid 8px;
+		border-image: url("/src/assets/uiSprites/HighlightButton_60x23.png") 8 fill stretch;
+		image-rendering: pixelated;
+		border-image-outset: 10px;
+
+		opacity: 0;
+		transition: all 100ms linear;
+	}
+
+	&:hover::after {
+		opacity: 1;
+		border-image-outset: 15px;
+	}
+}
+
+button.draw {
+	left: 10%;
+}
+
+button.discard {
+	right: 10%;
+}
+
+.side1 {
+	grid-area: side1;
+	position: relative;
+	width: var(--side-one-w);
+	left: calc(-1 * var(--side-one-w));
+}
+
+.side2 {
+	grid-area: side2;
+	position: relative;
+	width: var(--side-one-w);
+	right: 0;
+}

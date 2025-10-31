@@ -1,0 +1,140 @@
+@keyframes overlayMove {
+  from {
+    background-position: 0% 0%;
+  }
+  to {
+    background-position: 0% 100%;
+  }
+}
+.cardOverlay {
+  position: absolute;
+  inset: 0px;
+  --line-thickness: 4px;
+  background: linear-gradient(rgb(from var(--primary-color) r g b/0.1), rgb(from var(--primary-color) r g b/0.1) var(--line-thickness), transparent var(--line-thickness), transparent calc(var(--line-thickness) * 2));
+  background-size: 100% calc(var(--line-thickness) * 2);
+  background-repeat: repeat-y;
+  animation: overlayMove 22s infinite linear;
+}
+
+.cardUImain {
+  --card-bg-color: #1b1d24;
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  transform: scale(1);
+  transform: translate(-50%, -50%);
+  transition: transform 0.1s ease-out;
+  background-color: var(--card-bg-color);
+  border: 2px solid hsl(from var(--card-bg-color) h calc(s) calc(l * 1.5));
+  border-radius: 5px;
+  z-index: 2;
+}
+.cardUImain:hover {
+  cursor: pointer;
+}
+.cardUImain.enemy .imgCont {
+  transform: scaleX(-1);
+}
+.cardUImain > .cardInsHolder {
+  box-sizing: border-box;
+  position: absolute;
+  display: grid;
+  justify-items: center;
+  inset: 3px;
+}
+.cardUImain > .cardInsHolder .imgHolder {
+  width: 100%;
+  height: 58%;
+  border: 4px ridge #000000;
+  border-radius: 5px;
+  background: rgb(70, 70, 70);
+  box-sizing: border-box;
+}
+.cardUImain > .cardInsHolder .cardDesc {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 40%;
+  box-sizing: border-box;
+  display: grid;
+  justify-items: center;
+  border: 4px ridge #000000;
+  border-radius: 5px;
+  background: rgb(70, 70, 70);
+  font-size: 1em;
+  color: white;
+  text-align: center;
+  align-content: center;
+}
+.cardUImain > .cardInsHolder .cardName {
+  position: absolute;
+  width: 70%;
+  height: 8%;
+  top: -6%;
+  text-align: center;
+  align-content: center;
+  border: 4px ridge hsl(from var(--card-bg-color) h calc(s * 1.5) calc(l * 2));
+  border-radius: 3px;
+  background: hsl(from var(--card-bg-color) h calc(s) calc(l * 1.2));
+  color: azure;
+}
+
+.cardPlaceholder {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  transform: scale(1);
+  transform: translate(-50%, -50%);
+  opacity: 0.3;
+  z-index: 1;
+  border-radius: 1rem;
+  background-color: rgb(53, 53, 53);
+}
+.cardPlaceholder:hover {
+  opacity: 1;
+}
+
+.cardSelector {
+  --opacity: 0;
+  --x: 0px;
+  --y: 0px;
+  opacity: var(--opacity);
+  position: absolute;
+  top: var(--y);
+  left: var(--x);
+  transform: translate(-50%, -50%);
+  transition: all ease-in 200ms;
+  z-index: 0;
+  box-sizing: border-box;
+  border: solid 32px;
+  -o-border-image: url("/src/assets/uiSprites/HighlightSlot_26x26.png") 10;
+     border-image: url("/src/assets/uiSprites/HighlightSlot_26x26.png") 10;
+  border-image-outset: 16px;
+  image-rendering: pixelated;
+}
+
+.healthDefault_c {
+  position: absolute;
+  left: -10%;
+  top: 70%;
+  width: 10%;
+  height: 20%;
+  border: 4px ridge #000000;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.counterTrigger_c {
+  display: block;
+  position: absolute;
+  width: 50%;
+  height: 10%;
+  bottom: -5%;
+  border-radius: 5px 5px 0 0;
+  background: rgb(29, 29, 29);
+}
+.counterTrigger_c .tick.active {
+  box-shadow: 0 0 10px var(--primary-color);
+}/*# sourceMappingURL=card.css.map */
