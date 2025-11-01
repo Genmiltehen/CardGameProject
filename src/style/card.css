@@ -16,14 +16,19 @@
   animation: overlayMove 22s infinite linear;
 }
 
-.cardUImain {
-  --card-bg-color: #1b1d24;
-  position: absolute;
-  left: 0;
-  top: 0;
+.fixedCard {
+  position: absolute !important;
+  left: var(--x);
+  top: var(--y);
   display: block;
-  transform: scale(1);
-  transform: translate(-50%, -50%);
+  transform: scale(1) translate(-50%, -50%) rotate(0deg);
+}
+
+.cardUImain {
+  position: relative;
+  --x: 0px;
+  --y: 0px;
+  --card-bg-color: #1b1d24;
   transition: transform 0.1s ease-out;
   background-color: var(--card-bg-color);
   border: 2px solid hsl(from var(--card-bg-color) h calc(s) calc(l * 1.5));
@@ -42,6 +47,7 @@
   display: grid;
   justify-items: center;
   inset: 3px;
+  font-family: "fira code";
 }
 .cardUImain > .cardInsHolder .imgHolder {
   width: 100%;

@@ -81,7 +81,7 @@ export class boardPos {
 		const { col: i, row: j } = this;
 		const center = UIHandler.top_left.add(UIHandler.bottom_right).divScalar(2);
 
-		const { col: cols, row: rows } = UIHandler.boundMgr.board.dims;
+		const { col: cols, row: rows } = UIHandler.manager.board.dims;
 
 		const cardX = (-0.5 * (cols - 1) + i) * (UIHandler.cardWidth + UIHandler.gap_x);
 		const cardY = (-0.5 * (rows - 1) + j) * (UIHandler.cardHeight + UIHandler.gap_y);

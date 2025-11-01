@@ -1,4 +1,5 @@
 import { shuffleArray } from "../libs/utils.js";
+import { createGameEvent } from "../manager/cardEventSystem.js";
 
 export class PlayerFighter {
 	/** @type {CardBase[]} */
@@ -44,16 +45,13 @@ export class PlayerFighter {
 		if (this.drawPile.length < 1) {
 			this.moveDiscardToDraw();
 		}
-
-		/** @type {EV_GameEvent} */
-		const event = {
-			source: this,
-			data: {},
-		};
-		this.manager.eventSystem.dispatchEvent("CARD_DRAWN", event);
-
 		const card = this.drawPile.pop();
-		if (card != null) this.hand.push(card);
+		if (card != null) {
+			const event = createGameEvent("CARD_DRAWN", { drawnCard: card, player: this });
+			this.manager.eventSystem.dispatchEvent(event);
+
+			this.hand.push(card);
+		}
 	}
 
 	drawHand() {
@@ -66,12 +64,8 @@ export class PlayerFighter {
 
 		this.discardPile.splice(this.discardPile.indexOf(card), 1);
 
-		/** @type {EV_GameEvent} */
-		const event = {
-			source: this,
-			data: { card: card },
-		};
-		this.manager.eventSystem.dispatchEvent("CARD_DISCARDED", event);
+		const event = createGameEvent("CARD_DISCARDED", { discardedCard: card });
+		this.manager.eventSystem.dispatchEvent(event);
 
 		this.drawPile.push(card);
 	}
@@ -84,10 +78,7 @@ export class PlayerFighter {
 	moveDiscardToDraw() {
 		shuffleArray(this.discardPile);
 
-		const len = this.discardPile.length;
-		for (let i = 0; i < len; i++) {
-			const card = this.discardPile.pop();
-			if (card != null) this.drawPile.push(card);
-		}
+		let card;
+		while ((card = this.discardPile.pop())) this.drawPile.push(card);
 	}
 }

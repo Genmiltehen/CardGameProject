@@ -28,6 +28,16 @@
 }
 
 //INFO: MAIN SETUP
+.fixedCard {
+	position: absolute !important;
+	left: var(--x);
+	top: var(--y);
+
+	display: block;
+
+	transform: scale(1) translate(-50%, -50%) rotate(0deg);
+}
+
 .cardUImain {
 	&:hover {
 		cursor: pointer;
@@ -37,15 +47,11 @@
 		transform: scaleX(-1);
 	}
 
+	position: relative;
+	--x: 0px;
+	--y: 0px;
 	--card-bg-color: #1b1d24;
-	position: absolute;
-	left: 0;
-	top: 0;
 
-	display: block;
-
-	transform: scale(1);
-	transform: translate(-50%, -50%);
 	transition: transform 0.1s ease-out;
 
 	background-color: var(--card-bg-color);
@@ -61,6 +67,8 @@
 		justify-items: center;
 
 		inset: 3px;
+
+		font-family: "fira code";
 
 		.imgHolder {
 			width: 100%;

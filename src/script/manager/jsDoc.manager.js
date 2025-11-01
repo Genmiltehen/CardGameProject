@@ -4,8 +4,8 @@
 
 /** @typedef {import("../player/playerFighter.js").PlayerFighter} PlayerFighter*/
 
-/** @typedef {import("./cardManager.js").Manager} Manager */
-/** @typedef {import("./uiHandler.js").UIHandler} UIHandler */
+/** @typedef {import("./gameManager.js").GameManager} Manager */
+/** @typedef {import("./uiManager.js").UIManager} UIHandler */
 /** @typedef {import("./cardEventSystem.js").CardEventSystem} CardEventSystem */
 
 /* -------------------------------------------------------------------------- */
@@ -13,29 +13,46 @@
 /* -------------------------------------------------------------------------- */
 
 /**
- * @typedef {(
- * "TICK_BOARD" |
- * "TICK" |
- * "CARD_DRAWN" |
- * "CARD_DISCARDED" |
- * "CARD_REFRESHED" |
- * "")
- * } eventType
+ * @typedef {{
+ * TICK_BOARD: {},
+ * TICK: TickData,
+ * CARD_DRAWN: CardDrawnData,
+ * CARD_DISCARDED: CardDiscardedData,
+ * TRIGGER_COUNTER: TriggerCounterData, 
+ * }} EventDataMap
  */
 
 /**
- * @typedef {CardBase | Manager | PlayerFighter} EV_SourceType
+ * @typedef TickData
+ * @property {import("../libs/utils.js").boardPos} pos
+ * @property {EV_TargetType} target
  */
 
 /**
+ * @typedef CardDrawnData
+ * @property {CardBase} drawnCard
+ * @property {PlayerFighter} player
+ */
+
+/**
+ * @typedef CardDiscardedData
+ * @property {CardBase} discardedCard
+ */
+
+/**
+ * @typedef {CardBase | Manager | PlayerFighter} EV_TargetType
+ */
+
+/**
+ * @template {keyof EventDataMap} T
  * @typedef EV_GameEvent
- * @property {EV_SourceType} source
- * @property {CardBase} [target]
- * @property {object} data
+ * @property {T} type
+ * @property {EventDataMap[T]} data
  */
 
 /**
+ * @template {keyof EventDataMap} T
  * @callback EV_CallbackEventListener
- * @param {EV_GameEvent} [event]
+ * @param {EV_GameEvent<T>} event
  * @returns {void}
  */

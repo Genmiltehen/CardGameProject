@@ -1,5 +1,5 @@
 import { methodBind } from "../../libs/utils.js";
-import { Manager } from "../../manager/cardManager.js";
+import { GameManager } from "../../manager/gameManager.js";
 import { CardEntity } from "../cardEntity.js";
 import { ComponentTriggerCounter } from "../../component/triggerTypes/componentTriggerCounter.js";
 import { ComponentHealthOrganic } from "../../component/healthTypes/componentHealthOrganic.js";
@@ -20,7 +20,7 @@ const SOLIDER_SPRITE_VALUES = {
 };
 
 export class CardSolider extends CardEntity {
-	/**  @param {Manager} mgr */
+	/**  @param {GameManager} mgr */
 	constructor(mgr) {
 		super(mgr, {
 			spriteInitValues: SOLIDER_SPRITE_VALUES,
@@ -28,7 +28,7 @@ export class CardSolider extends CardEntity {
 		});
 		methodBind(this);
 		this.uiData.sprite.setDefaultAnimation("idle", 0.6);
-		this.uiData.sprite.playAnimation("hit", 0.5, 1, "default");
+		this.uiData.sprite.playDefaultAnimation();
 
 		const health = new ComponentHealthOrganic(this, { maxHealth: 10 });
 		this.components.add(health);
@@ -39,18 +39,14 @@ export class CardSolider extends CardEntity {
 		this.mgr.eventSystem.addListener("TICK", this.tick);
 	}
 
-	/** @param {EV_GameEvent} [event] */
+	/** @param {EV_GameEvent<"TICK">} [event] */
 	tick(event) {
-		if (event != null) {
-			if (event.target != null) {
-				const target = event.target;
-				if (this === target) {
-					const counter = this.components.getFirst(ComponentTriggerCounter);
-					if (counter == null) throw new Error("counter is not found");
-					counter.set({
-						current: counter.current + 1,
-					});
-				}
+		if (event != null && event.data.target != null) {
+			const target = event.data.target;
+			if (this === target) {
+				const counter = this.components.getFirst(ComponentTriggerCounter);
+				if (counter == null) throw new Error("counter is not found");
+				counter.advance()
 			}
 		}
 	}

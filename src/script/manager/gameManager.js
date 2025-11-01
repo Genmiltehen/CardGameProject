@@ -1,8 +1,8 @@
 import { _v } from "../libs/_v.js";
 import { boardPos, methodBind } from "../libs/utils.js";
 import { PlayerFighter } from "../player/playerFighter.js";
-import { CardEventSystem } from "./cardEventSystem.js";
-import { UIHandler } from "./uiHandler.js";
+import { CardEventSystem, createGameEvent } from "./cardEventSystem.js";
+import { UIManager } from "./uiManager.js";
 
 /**
  * @typedef iteratorResult
@@ -10,14 +10,10 @@ import { UIHandler } from "./uiHandler.js";
  * @property {CardEntity} [card]
  */
 
-/**
- *  @typedef {""} gameState
- */
+const BOARD_SIZE = new boardPos(6, 3);
 
-const BOARD_SIZE = { col: 6, row: 3 };
-
-export class Manager {
-	/** @type {UIHandler} */
+export class GameManager {
+	/** @type {UIManager} */
 	uiHandler;
 	/** @type {Board} */
 	board;
@@ -28,14 +24,14 @@ export class Manager {
 	player;
 
 	/**
-	 * @param {HTMLDivElement} mainWindow
+	 * @param {HTMLDivElement} hostWindow
 	 * @param {PlayerData} playerData
 	 */
-	constructor(mainWindow, playerData) {
+	constructor(hostWindow, playerData) {
 		methodBind(this);
 		this.board = new Board(BOARD_SIZE);
-		this.uiHandler = new UIHandler(this, mainWindow);
 		this.eventSystem = new CardEventSystem();
+		this.uiHandler = new UIManager(this, hostWindow);
 
 		this.player = new PlayerFighter(this, playerData);
 		// this.player
@@ -51,29 +47,15 @@ export class Manager {
 		for (const cardEnemyData of this.board.iterEnemies()) {
 			if (cardEnemyData.card != null) {
 				const pos = cardEnemyData.pos;
-				/** @type {EV_GameEvent} */
-				const cardEvent = {
-					source: this,
-					target: cardEnemyData.card,
-					data: {
-						pos: pos,
-					},
-				};
-				this.eventSystem.dispatchEvent("TICK", cardEvent);
+				const event = createGameEvent("TICK", { pos: pos, target: cardEnemyData.card });
+				this.eventSystem.dispatchEvent(event);
 			}
 		}
-		for (const cardEnemyData of this.board.iterAllies()) {
-			if (cardEnemyData.card != null) {
-				const pos = cardEnemyData.pos;
-				/** @type {EV_GameEvent} */
-				const cardEvent = {
-					source: this,
-					target: cardEnemyData.card,
-					data: {
-						pos: pos,
-					},
-				};
-				this.eventSystem.dispatchEvent("TICK", cardEvent);
+		for (const cardAllyData of this.board.iterAllies()) {
+			if (cardAllyData.card != null) {
+				const pos = cardAllyData.pos;
+				const event = createGameEvent("TICK", { pos: pos, target: cardAllyData.card });
+				this.eventSystem.dispatchEvent(event);
 			}
 		}
 	}

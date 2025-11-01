@@ -65,18 +65,18 @@ export class CardUI {
 	}
 
 	/**
-	 * @param {{
-	 *  cardSize?: number,
-	 * 	descString?: string,
-	 *  position?: _v,
-	 *  name?: string,
-	 *  isEnemy?: boolean,
-	 *  colorPallete?: {
-	 *   primary: number[]
-	 *  }
-	 * }} values
+	 * @param {object} values
+	 * @param {number} [values.cardSize]
+	 * @param {_v} [values.position]
+	 * @param {string} [values.descString]
+	 * @param {string} [values.name]
+	 * @param {boolean} [values.isEnemy]
+	 * @param {boolean} [values.isFixed]
+	 * @param {Object} [values.colorPallete]
+	 * @param {number[]} values.colorPallete.primary
 	 */
 	set(values) {
+		const CardStyle = this.container.style;
 		if (values.cardSize != null) {
 			this.height = values.cardSize;
 			this.width = values.cardSize * CardUI.aspectRatio;
@@ -94,14 +94,18 @@ export class CardUI {
 			cardName.innerText = values.name;
 		}
 		if (values.colorPallete != null) {
-			this.container.style.setProperty("--card-bg-color", RGBtoCssStr(values.colorPallete.primary));
+			CardStyle.setProperty("--card-bg-color", RGBtoCssStr(values.colorPallete.primary));
 		}
 		if (values.position != null) {
-			this.container.style.left = `${values.position.x}px`;
-			this.container.style.top = `${values.position.y}px`;
+			CardStyle.setProperty("--x", `${values.position.x}px`);
+			CardStyle.setProperty("--y", `${values.position.y}px`);
 		}
 		if (values.isEnemy != null) {
 			this.isEnemyFlag = values.isEnemy;
+		}
+		if (values.isFixed != null) {
+			if (values.isFixed) this.container.classList.add("fixedCard");
+			else this.container.classList.remove("fixedCard");
 		}
 		this.reloadCss();
 	}
@@ -115,3 +119,7 @@ export class CardUI {
 		CStyle.width = `${Math.round(this.height * CardUI.aspectRatio)}px`;
 	}
 }
+
+/**
+ 
+ */

@@ -15,7 +15,7 @@
 /** @typedef {"infinite" | number} spriteRepeatValues */
 
 /**
- * @typedef spriteInitValues						data set for sorite initialization
+ * @typedef spriteInitValues						data set for sprite initialization
  * @property {string} path 							path to spritesheet
  * @property {spriteDims} frameDims 				dimensions of frame in pixels
  * @property {spriteAnimationDataMap} animations	map: string -> animation data

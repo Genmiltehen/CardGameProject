@@ -5,21 +5,28 @@ import { boardPos, createElement, methodBind } from "../libs/utils.js";
 /** @type {number} */
 const CARD_SIZE = 200;
 
-export class UIHandler {
+export class UIManager {
 	/** @type {CardEntity[]} */
 	cardsOnBoard;
+	/** @type {HTMLDivElement} */
+	mainDiv
 
 	/** @type {CardPlaceholder[]} */
 	#cardPlaceholders;
 
 	/**
-	 * @param {Manager} mgr
-	 * @param {HTMLDivElement} mainWindow
+	 * @param {Manager} manager
+	 * @param {HTMLDivElement} hostWindow
 	 */
-	constructor(mgr, mainWindow) {
+	constructor(manager, hostWindow) {
 		methodBind(this);
-		this.boundMgr = mgr;
-		this.mainDiv = mainWindow;
+		this.manager = manager;
+
+		/** @type {?HTMLDivElement} */
+		const mainDiv = hostWindow.querySelector("div.main");
+		if (mainDiv == null) throw new Error("Main Div is not found");
+		this.mainDiv = mainDiv;
+		// this.mainDiv = hostWindow;
 
 		/* #region  sizing */
 		const comp_ = this.mainDiv.getBoundingClientRect();
@@ -36,8 +43,8 @@ export class UIHandler {
 		this.gap_y = 30;
 
 		this.#cardPlaceholders = [];
-		for (let i = 0; i < this.boundMgr.board.dims.col; i++) {
-			for (let j = 0; j < this.boundMgr.board.dims.row; j++) {
+		for (let i = 0; i < this.manager.board.dims.col; i++) {
+			for (let j = 0; j < this.manager.board.dims.row; j++) {
 				const cardPC = new CardPlaceholder(this, new boardPos(i, j));
 				this.#addPlaceholder(cardPC);
 			}
@@ -46,6 +53,8 @@ export class UIHandler {
 		this.boardSelector.reload();
 
 		window.addEventListener("resize", this.evResize);
+
+		this.manager.eventSystem.addListener("CARD_DRAWN", this.gevCardDrawn);
 	}
 
 	/**
@@ -54,17 +63,20 @@ export class UIHandler {
 	 */
 	placeCard(card, pos) {
 		// INFO: error handle
-		if (!this.boundMgr.board.isValidPosition(pos)) throw new Error(`Cant place card at position ${pos}`);
-		if (this.boundMgr.board.getCard(pos) != null) throw Error(`Trying to place card where card already is: ${pos}`);
+		if (!this.manager.board.isValidPosition(pos)) throw new Error(`Cant place card at position ${pos}`);
+		if (this.manager.board.getCard(pos) != null) throw Error(`Trying to place card where card already is: ${pos}`);
 
 		if (this.cardsOnBoard.includes(card)) this.removeCard(card);
 
-		card.uiData.set({ isEnemy: pos.col >= this.boundMgr.board.dims.col / 2 });
+		card.uiData.set({
+			isEnemy: pos.col >= this.manager.board.dims.col / 2,
+			isFixed: true,
+		});
 		this.mainDiv.appendChild(card.uiData.container);
 
 		card.cardBoardPosition = pos;
 		this.cardsOnBoard.push(card);
-		this.boundMgr.board.setCard(pos, card);
+		this.manager.board.setCard(pos, card);
 
 		this.updateUI();
 	}
@@ -77,7 +89,7 @@ export class UIHandler {
 		if (card.cardBoardPosition == null) throw new Error("How? [no position when removing card from board]");
 		const pos = card.cardBoardPosition;
 		card.cardBoardPosition = null;
-		this.boundMgr.board.setCard(pos, null);
+		this.manager.board.setCard(pos, null);
 
 		const idx = this.cardsOnBoard.indexOf(card);
 		if (idx > -1) this.cardsOnBoard.splice(idx, 1);
@@ -88,7 +100,7 @@ export class UIHandler {
 		if (card.cardBoardPosition == null) throw new Error("Updating cardEntity that is not on board");
 		card.uiData.set({
 			cardSize: this.cardHeight,
-			position: this.getPositionFromBoard(card.cardBoardPosition),
+			position: card.cardBoardPosition.convertTo_v(this),
 		});
 	}
 
@@ -105,25 +117,19 @@ export class UIHandler {
 		}
 	}
 
-	/**
-	 * @param {boardPos} boardPos
-	 * @returns {_v}
-	 */
-	getPositionFromBoard(boardPos) {
-		const { col: i, row: j } = boardPos;
-		const center = this.top_left.add(this.bottom_right).divScalar(2);
-
-		const { col: cols, row: rows } = this.boundMgr.board.dims;
-
-		const cardX = (-0.5 * (cols - 1) + i) * (this.cardWidth + this.gap_x);
-		const cardY = (-0.5 * (rows - 1) + j) * (this.cardHeight + this.gap_y);
-		const _off = new _v(cardX, cardY);
-
-		return center.add(_off);
-	}
-
 	evResize() {
 		this.updateUI();
+	}
+
+	/** @type {EV_CallbackEventListener<"CARD_DRAWN">} */
+	gevCardDrawn(event) {
+		const card = event.data.drawnCard;
+		this.mainDiv.appendChild(card.uiData.container);
+
+		console.log("bbb");
+
+		const handLen = event.data.player.hand.length;
+		event.data.player.hand;
 	}
 
 	/** @param {CardPlaceholder} placeholder */
@@ -143,7 +149,7 @@ class CardPlaceholder {
 	size;
 
 	/**
-	 * @param {UIHandler} UIHandler
+	 * @param {UIManager} UIHandler
 	 * @param {boardPos} pos
 	 */
 	constructor(UIHandler, pos) {
@@ -173,7 +179,7 @@ class CardPlaceholder {
 	}
 
 	reload() {
-		const { x, y } = this.UIHandler.getPositionFromBoard(this.boardPos);
+		const { x, y } = this.boardPos.convertTo_v(this.UIHandler);
 		const PCStyle = this.container.style;
 
 		PCStyle.setProperty("left", `${x}px`);
@@ -221,7 +227,7 @@ class CardSelector {
 	fadeTimoutId;
 
 	/**
-	 * @param {UIHandler} UIHandler
+	 * @param {UIManager} UIHandler
 	 */
 	constructor(UIHandler) {
 		this.UIHandler = UIHandler;
@@ -261,7 +267,7 @@ class CardSelector {
 		CardSelectorStyle.setProperty("--opacity", this.active ? "1" : "0");
 
 		if (this.boardPos !== null) {
-			const { x, y } = this.UIHandler.getPositionFromBoard(this.boardPos);
+			const { x, y } = this.boardPos.convertTo_v(this.UIHandler);
 			CardSelectorStyle.setProperty("--x", `${x}px`);
 			CardSelectorStyle.setProperty("--y", `${y}px`);
 		}

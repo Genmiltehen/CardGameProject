@@ -1,5 +1,6 @@
 import { ProgressBarSteps } from "../../libs/ui/progressBarTicks/progressBarTicks.js";
 import { createElement, methodBind, clamp } from "../../libs/utils.js";
+import { createGameEvent } from "../../manager/cardEventSystem.js";
 import { componentTriggerBase } from "./componentTriggerBase.js";
 
 export class ComponentTriggerCounter extends componentTriggerBase {
@@ -16,7 +17,7 @@ export class ComponentTriggerCounter extends componentTriggerBase {
 	/**
 	 * @constructor
 	 * @param {CardEntity} host
-	 * @param {{maxCounter: number}} data 
+	 * @param {{maxCounter: number}} data
 	 */
 	constructor(host, data) {
 		super(host);
@@ -58,6 +59,16 @@ export class ComponentTriggerCounter extends componentTriggerBase {
 			this.#bar.set({
 				maxValue: this.maximum,
 			});
+		}
+	}
+
+	advance() {
+		this.set({
+			current: this.current + 1,
+		});
+		if (this.current == this.maximum) {
+			const event = createGameEvent("TRIGGER_COUNTER", this.host, { counter: this });
+			this.host.mgr.eventSystem.dispatchEvent(event)
 		}
 	}
 }

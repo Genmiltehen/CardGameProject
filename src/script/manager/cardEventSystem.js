@@ -1,10 +1,11 @@
 export class CardEventSystem {
-	/** @type {Map<eventType, EV_CallbackEventListener[]>} */
+	/** @type {Map<keyof EventDataMap, EV_CallbackEventListener<any>[]>} */
 	#listenerMap = new Map();
 
 	/**
-	 * @param {eventType} eventType
-	 * @param {EV_CallbackEventListener} listener
+	 * @template {keyof EventDataMap} T
+	 * @param {T} eventType
+	 * @param {EV_CallbackEventListener<T>} listener
 	 */
 	addListener(eventType, listener) {
 		if (!this.#listenerMap.has(eventType)) {
@@ -16,26 +17,40 @@ export class CardEventSystem {
 	}
 
 	/**
-	 * @param {eventType} eventType
-	 * @param {EV_CallbackEventListener} callback
+	 * @template {keyof EventDataMap} T
+	 * @param {T} eventType
+	 * @param {EV_CallbackEventListener<T>} listener
 	 */
-	removeListener(eventType, callback) {
+	removeListener(eventType, listener) {
 		const listeners = this.#listenerMap.get(eventType);
 		if (listeners == null) {
 			const msg = `there is no listener for event type ${eventType}`;
 			throw new Error(msg);
 		}
-		listeners.splice(listeners.indexOf(callback), 1);
+		listeners.splice(listeners.indexOf(listener), 1);
 	}
 
 	/**
-	 * @param {eventType} eventType
-	 * @param {EV_GameEvent} event
+	 * @param {EV_GameEvent<any>} event
 	 */
-	dispatchEvent(eventType, event) {
-		const eventListeners = this.#listenerMap.get(eventType) || [];
+	dispatchEvent(event) {
+		const eventListeners = this.#listenerMap.get(event.type) || [];
 		for (const callback of eventListeners) {
 			callback(event);
 		}
 	}
+}
+
+/**
+ * Creates a game event with type-safe data based on the event type
+ * @template {keyof EventDataMap} T
+ * @param {T} event_type
+ * @param {EventDataMap[T]} event_data
+ * @returns {EV_GameEvent<T>}
+ */
+export function createGameEvent(event_type, event_data) {
+	return {
+		type: event_type,
+		data: event_data,
+	};
 }
