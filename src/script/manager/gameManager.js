@@ -1,7 +1,8 @@
 import { _v } from "../libs/_v.js";
 import { boardPos, methodBind } from "../libs/utils.js";
 import { PlayerFighter } from "../player/playerFighter.js";
-import { CardEventSystem, createGameEvent } from "./cardEventSystem.js";
+import { CardEventSystem, createGameEvent } from "./eventSystem.js";
+import { GameBoard } from "./gameBoard.js";
 import { UIManager } from "./uiManager.js";
 
 /**
@@ -13,10 +14,10 @@ import { UIManager } from "./uiManager.js";
 const BOARD_SIZE = new boardPos(6, 3);
 
 export class GameManager {
-	/** @type {UIManager} */
-	uiHandler;
-	/** @type {Board} */
-	board;
+	/** @type {?UIManager} */
+	#uiManager;
+	/** @type {GameBoard} */
+	gameBoard;
 	/** @type {CardEventSystem} */
 	eventSystem;
 
@@ -24,146 +25,53 @@ export class GameManager {
 	player;
 
 	/**
-	 * @param {HTMLDivElement} hostWindow
 	 * @param {PlayerData} playerData
 	 */
-	constructor(hostWindow, playerData) {
-		methodBind(this);
-		this.board = new Board(BOARD_SIZE);
+	constructor(playerData) {
+		methodBind(this, "ev");
+		this.gameBoard = new GameBoard(this, BOARD_SIZE);
 		this.eventSystem = new CardEventSystem();
-		this.uiHandler = new UIManager(this, hostWindow);
+		this.#uiManager = null;
 
 		this.player = new PlayerFighter(this, playerData);
-		// this.player
 
 		this.#setupEvents();
 	}
 
-	#setupEvents() {
-		this.eventSystem.addListener("TICK_BOARD", this.tickBoard);
+	
+	/**
+	 * @readonly
+	 * @type {UIManager}
+	 */
+	get uiManager() {
+		if (this.#uiManager == null) throw new Error("UIManager is not bound");
+		return this.#uiManager;
 	}
 
-	tickBoard() {
-		for (const cardEnemyData of this.board.iterEnemies()) {
+	/** @param {UIManager} uiManager */
+	bindUIManager(uiManager) {
+		this.#uiManager = uiManager;
+		this.#uiManager.bindGameManager(this);
+	}
+
+	#setupEvents() {
+		this.eventSystem.addListener("TICK_BOARD", this.evGTickBoard);
+	}
+
+	evGTickBoard() {
+		for (const cardEnemyData of this.gameBoard.iterEnemies()) {
 			if (cardEnemyData.card != null) {
 				const pos = cardEnemyData.pos;
 				const event = createGameEvent("TICK", { pos: pos, target: cardEnemyData.card });
 				this.eventSystem.dispatchEvent(event);
 			}
 		}
-		for (const cardAllyData of this.board.iterAllies()) {
+		for (const cardAllyData of this.gameBoard.iterAllies()) {
 			if (cardAllyData.card != null) {
 				const pos = cardAllyData.pos;
 				const event = createGameEvent("TICK", { pos: pos, target: cardAllyData.card });
 				this.eventSystem.dispatchEvent(event);
 			}
-		}
-	}
-}
-
-class Board {
-	/**
-	 * @constructor
-	 * @param {boardPos} dims
-	 */
-	constructor(dims) {
-		this.dims = dims;
-		/** @type {(?CardEntity)[][]} */
-		this.arr = Array.from(Array(this.dims.row), () => new Array(this.dims.col).fill(null));
-	}
-
-	/**
-	 * @param {boardPos} pos
-	 * @returns {boolean}
-	 */
-	isValidPosition(pos) {
-		if (!(0 <= pos.col && pos.col < this.dims.col)) return false;
-		if (!(0 <= pos.row && pos.row < this.dims.row)) return false;
-		return true;
-	}
-
-	/**
-	 * @param {boardPos} pos
-	 * @returns {?CardEntity}
-	 */
-	getCard(pos) {
-		return this.arr[pos.row][pos.col];
-	}
-
-	/**
-	 * @param {boardPos} pos
-	 * @param {?CardEntity} card
-	 */
-	setCard(pos, card) {
-		this.arr[pos.row][pos.col] = card;
-	}
-
-	/**
-	 * @param {number} idx
-	 * @yields {iteratorResult}
-	 */
-	*iterRow(idx) {
-		for (let i = 0; i < this.dims.col; i++) {
-			const pos = new boardPos(i, idx);
-			yield {
-				pos: pos,
-				card: this.getCard(pos),
-			};
-		}
-	}
-
-	/**
-	 * @param {number} idx
-	 * @yields {iteratorResult}
-	 */
-	*iterCol(idx) {
-		for (let i = 0; i < this.dims.row; i++) {
-			const pos = new boardPos(idx, i);
-			yield {
-				pos: pos,
-				card: this.getCard(pos),
-			};
-		}
-	}
-
-	*iterEnemies() {
-		const enemy_half = this.dims.col / 2;
-		for (const col_id of new Array(enemy_half).keys()) {
-			const enemy_col_id = enemy_half + col_id;
-			yield* this.iterCol(enemy_col_id);
-		}
-	}
-
-	*iterAllies() {
-		const enemy_half = this.dims.col / 2;
-		for (const col_id of new Array(enemy_half).keys()) {
-			const ally_col_id = enemy_half - col_id - 1;
-			yield* this.iterCol(ally_col_id);
-		}
-	}
-
-	*iterFullBoard() {
-		yield* this.iterEnemies();
-		yield* this.iterAllies();
-	}
-
-	/** @param {"enemy"|"ally"|"full"} type */
-	*iterBoard(type) {
-		switch (type) {
-			case "enemy":
-				yield* this.iterEnemies();
-				break;
-
-			case "ally":
-				yield* this.iterAllies();
-				break;
-
-			case "ally":
-				yield* this.iterAllies();
-				break;
-
-			default:
-				break;
 		}
 	}
 }

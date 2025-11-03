@@ -1,8 +1,9 @@
 import { CardSolider } from "./card/entities/cardSolider.js";
 import { _v } from "./libs/_v.js";
 import { boardPos } from "./libs/utils.js";
-import { createGameEvent } from "./manager/cardEventSystem.js";
+import { createGameEvent } from "./manager/eventSystem.js";
 import { GameManager } from "./manager/gameManager.js";
+import { UIManager } from "./manager/uiManager.js";
 
 import { getSoliderPreset } from "./player/presets.js";
 
@@ -16,7 +17,9 @@ if (drawButton == null) throw new Error("die");
 
 const pd = getSoliderPreset();
 
-const mgr = new GameManager(base, pd);
+const mgr = new GameManager(pd);
+const uiMgr = new UIManager(base);
+mgr.bindUIManager(uiMgr);
 
 const test_setup = [
 	{ pos: new boardPos(0, 0), name: "test_ally" },
@@ -27,10 +30,10 @@ test_setup.forEach(({ pos: pos, name: name }) => {
 	const res = new CardSolider(mgr);
 	res.uiData.set({
 		descString: "god is angry",
-		position: mgr.uiHandler.bottom_right,
+		position: mgr.uiManager.uiBoard.bottom_right,
 	});
 
-	mgr.uiHandler.placeCard(res, pos);
+	mgr.gameBoard.placeCard(res, pos);
 });
 
 const event = createGameEvent("TICK_BOARD", {});

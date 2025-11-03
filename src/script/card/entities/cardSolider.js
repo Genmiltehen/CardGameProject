@@ -36,11 +36,11 @@ export class CardSolider extends CardEntity {
 
 		const counter = new ComponentTriggerCounter(this, { maxCounter: 5 });
 		this.components.add(counter);
-		this.mgr.eventSystem.addListener("TICK", this.tick);
+		this.mgr.eventSystem.addListener("TICK", this.evGTick);
 	}
 
 	/** @param {EV_GameEvent<"TICK">} [event] */
-	tick(event) {
+	evGTick(event) {
 		if (event != null && event.data.target != null) {
 			const target = event.data.target;
 			if (this === target) {

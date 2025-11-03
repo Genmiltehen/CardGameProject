@@ -12,7 +12,7 @@
 
 /**
  * @typedef CardInitData
- * @property {new(manager: Manager) => import("../card/cardBase.js").CardBase} cardType
+ * @property {new(manager: GameManager) => import("../card/cardBase.js").CardBase} cardType
  * @property {ComponentInitData<new(host: CardBase, data: object) => import("../component/componentBase.js").ComponentBase>[]} componentModifiersData
  */
 

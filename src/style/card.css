@@ -87,9 +87,11 @@
 }
 
 .cardPlaceholder {
+  --x: 0px;
+  --y: 0px;
   position: absolute;
-  left: 0;
-  top: 0;
+  top: var(--y);
+  left: var(--x);
   display: block;
   transform: scale(1);
   transform: translate(-50%, -50%);

@@ -15,13 +15,13 @@ export class CardBase {
 
 	/** @type {CardUI} */
 	uiData;
-	/** @type {Manager} */
+	/** @type {GameManager} */
 	mgr;
 	/** @type {ComponentList} */
 	components;
 
 	/** 
-	 * @param {Manager} manager 
+	 * @param {GameManager} manager 
 	 * @param {CardBaseInitValues} data
 	 */
 	constructor(manager, data) {
@@ -40,6 +40,4 @@ export class CardBase {
 	validatePos(pos){
 		return false;
 	}
-
-	
 }

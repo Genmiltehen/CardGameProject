@@ -119,9 +119,12 @@
 }
 
 .cardPlaceholder {
+	--x: 0px;
+	--y: 0px;
+	
 	position: absolute;
-	left: 0;
-	top: 0;
+	top: var(--y);
+	left: var(--x);
 
 	display: block;
 
@@ -130,10 +133,6 @@
 
 	opacity: 0.3;
 	z-index: 1;
-
-	// border: solid 8px;
-	// border-image: url("/src/assets/uiSprites/MenusBox_34x34.png") 8 fill stretch;
-	// image-rendering: pixelated;
 
 	border-radius: 1rem;
 	background-color: rgb(53, 53, 53);

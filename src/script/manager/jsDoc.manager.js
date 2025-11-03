@@ -4,9 +4,10 @@
 
 /** @typedef {import("../player/playerFighter.js").PlayerFighter} PlayerFighter*/
 
-/** @typedef {import("./gameManager.js").GameManager} Manager */
-/** @typedef {import("./uiManager.js").UIManager} UIHandler */
-/** @typedef {import("./cardEventSystem.js").CardEventSystem} CardEventSystem */
+/** @typedef {import("./gameManager.js").GameManager} GameManager */
+/** @typedef {import("./uiManager.js").UIManager} UIManager */
+/** @typedef {import("./eventSystem.js").CardEventSystem} CardEventSystem */
+/** @typedef {import("./gameBoard.js").GameBoard} GameBoard */
 
 /* -------------------------------------------------------------------------- */
 /*                                   DEFINES                                  */
@@ -40,7 +41,7 @@
  */
 
 /**
- * @typedef {CardBase | Manager | PlayerFighter} EV_TargetType
+ * @typedef {CardBase | GameManager | PlayerFighter} EV_TargetType
  */
 
 /**

@@ -1,120 +1,46 @@
-import { CardUI } from "../card/cardUI.js";
 import { _v } from "../libs/_v.js";
-import { boardPos, createElement, methodBind } from "../libs/utils.js";
-
-/** @type {number} */
-const CARD_SIZE = 200;
+import { methodBind } from "../libs/utils.js";
+import { UIBoard } from "./uiBoard.js";
 
 export class UIManager {
-	/** @type {CardEntity[]} */
-	cardsOnBoard;
 	/** @type {HTMLDivElement} */
-	mainDiv
-
-	/** @type {CardPlaceholder[]} */
-	#cardPlaceholders;
+	boardDiv;
+	/** @type {?GameManager} */
+	#manager;
 
 	/**
-	 * @param {Manager} manager
 	 * @param {HTMLDivElement} hostWindow
 	 */
-	constructor(manager, hostWindow) {
-		methodBind(this);
-		this.manager = manager;
+	constructor(hostWindow) {
+		methodBind(this, "ev");
+		this.#manager = null;
 
 		/** @type {?HTMLDivElement} */
 		const mainDiv = hostWindow.querySelector("div.main");
 		if (mainDiv == null) throw new Error("Main Div is not found");
-		this.mainDiv = mainDiv;
-		// this.mainDiv = hostWindow;
+		this.boardDiv = mainDiv;
 
-		/* #region  sizing */
-		const comp_ = this.mainDiv.getBoundingClientRect();
-		this.top_left = new _v(comp_.x, comp_.y);
-		this.bottom_right = this.top_left.add(new _v(comp_.width, comp_.height).divScalar(2));
-		/* #endregion */
-
-		this.cardHeight = CARD_SIZE;
-		this.cardWidth = this.cardHeight * CardUI.aspectRatio;
-
-		this.cardsOnBoard = [];
-
-		this.gap_x = 50;
-		this.gap_y = 30;
-
-		this.#cardPlaceholders = [];
-		for (let i = 0; i < this.manager.board.dims.col; i++) {
-			for (let j = 0; j < this.manager.board.dims.row; j++) {
-				const cardPC = new CardPlaceholder(this, new boardPos(i, j));
-				this.#addPlaceholder(cardPC);
-			}
-		}
-		this.boardSelector = new CardSelector(this);
-		this.boardSelector.reload();
+		this.uiBoard = new UIBoard(this);
 
 		window.addEventListener("resize", this.evResize);
-
-		this.manager.eventSystem.addListener("CARD_DRAWN", this.gevCardDrawn);
 	}
 
-	/**
-	 * @param {CardEntity} card
-	 * @param {boardPos} pos
-	 */
-	placeCard(card, pos) {
-		// INFO: error handle
-		if (!this.manager.board.isValidPosition(pos)) throw new Error(`Cant place card at position ${pos}`);
-		if (this.manager.board.getCard(pos) != null) throw Error(`Trying to place card where card already is: ${pos}`);
+	/** @param {GameManager} gameManager */
+	bindGameManager(gameManager) {
+		this.#manager = gameManager;
+		this.#manager.eventSystem.addListener("CARD_DRAWN", this.evGCardDrawn);
 
-		if (this.cardsOnBoard.includes(card)) this.removeCard(card);
-
-		card.uiData.set({
-			isEnemy: pos.col >= this.manager.board.dims.col / 2,
-			isFixed: true,
-		});
-		this.mainDiv.appendChild(card.uiData.container);
-
-		card.cardBoardPosition = pos;
-		this.cardsOnBoard.push(card);
-		this.manager.board.setCard(pos, card);
-
-		this.updateUI();
+		this.uiBoard.init();
 	}
 
-	/** @param {CardEntity} card */
-	removeCard(card) {
-		if (!this.cardsOnBoard.includes(card)) throw new Error(`Removing card that is not on board`);
-		card.uiData.container.remove();
-
-		if (card.cardBoardPosition == null) throw new Error("How? [no position when removing card from board]");
-		const pos = card.cardBoardPosition;
-		card.cardBoardPosition = null;
-		this.manager.board.setCard(pos, null);
-
-		const idx = this.cardsOnBoard.indexOf(card);
-		if (idx > -1) this.cardsOnBoard.splice(idx, 1);
-	}
-
-	/** @param {CardEntity} card*/
-	updateCard(card) {
-		if (card.cardBoardPosition == null) throw new Error("Updating cardEntity that is not on board");
-		card.uiData.set({
-			cardSize: this.cardHeight,
-			position: card.cardBoardPosition.convertTo_v(this),
-		});
+	/** @type {GameManager} */
+	get gameManager() {
+		if (this.#manager == null) throw new Error("No gameManager is bound");
+		return this.#manager;
 	}
 
 	updateUI() {
-		const comp_ = this.mainDiv.getBoundingClientRect();
-		this.top_left = new _v(comp_.x, comp_.y);
-		this.bottom_right = this.top_left.add(new _v(comp_.width, comp_.height));
-
-		for (const card of this.cardsOnBoard) {
-			this.updateCard(card);
-		}
-		for (const placeholder of this.#cardPlaceholders) {
-			placeholder.reload();
-		}
+		this.uiBoard.updateUI();
 	}
 
 	evResize() {
@@ -122,154 +48,12 @@ export class UIManager {
 	}
 
 	/** @type {EV_CallbackEventListener<"CARD_DRAWN">} */
-	gevCardDrawn(event) {
+	evGCardDrawn(event) {
 		const card = event.data.drawnCard;
-		this.mainDiv.appendChild(card.uiData.container);
+		this.boardDiv.appendChild(card.uiData.container);
 
-		console.log("bbb");
-
-		const handLen = event.data.player.hand.length;
 		event.data.player.hand;
-	}
-
-	/** @param {CardPlaceholder} placeholder */
-	#addPlaceholder(placeholder) {
-		this.#cardPlaceholders.push(placeholder);
-		this.mainDiv.appendChild(placeholder.container);
-		placeholder.reload();
-	}
-}
-
-class CardPlaceholder {
-	/** @type {boardPos} */
-	boardPos;
-	/** @type {HTMLDivElement} */
-	container;
-	/** @type {_v} */
-	size;
-
-	/**
-	 * @param {UIManager} UIHandler
-	 * @param {boardPos} pos
-	 */
-	constructor(UIHandler, pos) {
-		methodBind(this);
-		this.UIHandler = UIHandler;
-		this.size = new _v(this.UIHandler.cardWidth, this.UIHandler.cardHeight);
-		this.boardPos = pos;
-		// @ts-ignore
-		this.container = createElement("div.cardPlaceholder");
-		this.container.addEventListener("mouseenter", this.EV_MouseEnter);
-		this.container.addEventListener("mouseleave", this.EV_MouseLeave);
-	}
-
-	/**
-	 * @param {object} values
-	 * @param {_v} [values.size]
-	 * @param {boardPos} [values.bPos]
-	 */
-	set(values) {
-		if (values.size != null) {
-			this.size = values.size;
-		}
-		if (values.bPos != null) {
-			this.boardPos = values.bPos;
-		}
-		this.reload();
-	}
-
-	reload() {
-		const { x, y } = this.boardPos.convertTo_v(this.UIHandler);
-		const PCStyle = this.container.style;
-
-		PCStyle.setProperty("left", `${x}px`);
-		PCStyle.setProperty("top", `${y}px`);
-		PCStyle.setProperty("width", `${this.size.x}px`);
-		PCStyle.setProperty("height", `${this.size.y}px`);
-	}
-
-	/** @param {MouseEvent} ev */
-	EV_MouseEnter(ev) {
-		const sel = this.UIHandler.boardSelector;
-		if (sel.fadeTimoutId != null) {
-			window.clearTimeout(sel.fadeTimoutId);
-			sel.fadeTimoutId = null;
-		}
-		sel.set({
-			bPos: this.boardPos,
-			active: true,
-		});
-	}
-
-	/** @param {MouseEvent} ev */
-	EV_MouseLeave(ev) {
-		const sel = this.UIHandler.boardSelector;
-		sel.set({ bPos: null });
-		console.log("aaa");
-
-		sel.fadeTimoutId = window.setTimeout(() => {
-			if (sel.boardPos == null) sel.set({ active: false });
-		}, 1000);
-	}
-}
-
-class CardSelector {
-	/** @type {?boardPos} */
-	boardPos;
-	/** @type {HTMLDivElement} */
-	container;
-	/** @type {_v} */
-	size;
-
-	/** @type {boolean} */
-	active;
-	/** @type {?number} */
-	fadeTimoutId;
-
-	/**
-	 * @param {UIManager} UIHandler
-	 */
-	constructor(UIHandler) {
-		this.UIHandler = UIHandler;
-		this.size = new _v(this.UIHandler.cardWidth, this.UIHandler.cardHeight);
-		this.boardPos = null;
-		this.active = false;
-		// @ts-ignore
-		this.container = createElement("div.cardSelector");
-		this.UIHandler.mainDiv.appendChild(this.container);
-
-		this.fadeTimoutId = null;
-	}
-
-	/**
-	 * @param {object} values
-	 * @param {_v} [values.size]
-	 * @param {boardPos | null} [values.bPos]
-	 * @param {boolean} [values.active]
-	 */
-	set(values) {
-		if (values.size != null) {
-			this.size = values.size;
-		}
-		if (values.bPos !== undefined) {
-			this.boardPos = values.bPos;
-		}
-		if (values.active != null) {
-			this.active = values.active;
-		}
-		this.reload();
-	}
-
-	reload() {
-		const CardSelectorStyle = this.container.style;
-		CardSelectorStyle.setProperty("width", `${this.size.x}px`);
-		CardSelectorStyle.setProperty("height", `${this.size.y}px`);
-		CardSelectorStyle.setProperty("--opacity", this.active ? "1" : "0");
-
-		if (this.boardPos !== null) {
-			const { x, y } = this.boardPos.convertTo_v(this.UIHandler);
-			CardSelectorStyle.setProperty("--x", `${x}px`);
-			CardSelectorStyle.setProperty("--y", `${y}px`);
-		}
+		const handLen = event.data.player.hand.length;
+		const inHandIndex = event.data.player.hand.indexOf(event.data.drawnCard);
 	}
 }

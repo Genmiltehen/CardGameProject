@@ -1,5 +1,5 @@
 import { shuffleArray } from "../libs/utils.js";
-import { createGameEvent } from "../manager/cardEventSystem.js";
+import { createGameEvent } from "../manager/eventSystem.js";
 
 export class PlayerFighter {
 	/** @type {CardBase[]} */
@@ -12,11 +12,11 @@ export class PlayerFighter {
 	/** @type {number} */
 	drawAmount;
 
-	/**  @type {Manager} */
+	/**  @type {GameManager} */
 	manager;
 
 	/**
-	 * @param {Manager} manager
+	 * @param {GameManager} manager
 	 * @param {PlayerData} playerData
 	 */
 	constructor(manager, playerData) {

@@ -1,6 +1,6 @@
 import { ProgressBarSteps } from "../../libs/ui/progressBarTicks/progressBarTicks.js";
 import { createElement, methodBind, clamp } from "../../libs/utils.js";
-import { createGameEvent } from "../../manager/cardEventSystem.js";
+import { createGameEvent } from "../../manager/eventSystem.js";
 import { componentTriggerBase } from "./componentTriggerBase.js";
 
 export class ComponentTriggerCounter extends componentTriggerBase {

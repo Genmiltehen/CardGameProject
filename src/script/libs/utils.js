@@ -1,10 +1,17 @@
 import { _v } from "./_v.js";
 
-/** @param {any} class_ */
-export function methodBind(class_) {
+/**
+ * @param {any} class_
+ * @param {string} [selector]
+ */
+export function methodBind(class_, selector) {
 	const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(class_));
 	methods
-		.filter((method) => method !== "constructor")
+		.filter((method) => {
+			const isNotCtor = method !== "constructor";
+			const selected = selector == null ? true : method.startsWith("ev");
+			return isNotCtor && selected;
+		})
 		.forEach((method) => {
 			class_[method] = class_[method].bind(class_);
 		});
@@ -74,20 +81,6 @@ export class boardPos {
 		this.col = col;
 		/** @type {number} */
 		this.row = row;
-	}
-
-	/** @param {UIHandler} UIHandler */
-	convertTo_v(UIHandler) {
-		const { col: i, row: j } = this;
-		const center = UIHandler.top_left.add(UIHandler.bottom_right).divScalar(2);
-
-		const { col: cols, row: rows } = UIHandler.manager.board.dims;
-
-		const cardX = (-0.5 * (cols - 1) + i) * (UIHandler.cardWidth + UIHandler.gap_x);
-		const cardY = (-0.5 * (rows - 1) + j) * (UIHandler.cardHeight + UIHandler.gap_y);
-		const _off = new _v(cardX, cardY);
-
-		return center.add(_off);
 	}
 }
 

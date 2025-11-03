@@ -5,7 +5,7 @@ export class CardEntity extends CardBase {
 	cardBoardPosition;
 	
 	/**
-	 * @param {Manager} manager
+	 * @param {GameManager} manager
 	 * @param {import("./cardBase.js").CardBaseInitValues} base
 	 */
 	constructor(manager, base) {
