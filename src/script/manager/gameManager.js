@@ -11,7 +11,7 @@ import { UIManager } from "./uiManager.js";
  * @property {CardEntity} [card]
  */
 
-const BOARD_SIZE = new boardPos(6, 3);
+const BOARD_SIZE = new boardPos(6, 2);
 
 export class GameManager {
 	/** @type {?UIManager} */

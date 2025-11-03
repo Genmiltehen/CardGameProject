@@ -1,17 +1,16 @@
-/* @font-face {
-  font-family: myFont; 
-  src: url(); 
-} */
 * {
   margin: 0;
   padding: 0;
+  -webkit-user-select: none; /* Safari */ /* IE 10 and IE 11 */
+  -moz-user-select: none;
+       user-select: none; /* Standard syntax */
 }
 
 body {
   font-size: 10px;
   overflow: hidden;
   --header-size: 3rem;
-  --footer-size: 10rem;
+  --footer-size: 15rem;
   --side-one-w: 20rem;
   background-color: black;
 }
@@ -44,7 +43,7 @@ body {
   width: 100vw;
   height: 100vh;
   display: grid;
-  grid-template-areas: "header header header" "side1 main side2" "footer footer footer";
+  grid-template-areas: "header header header" "side1 main side2" "hand hand hand";
   grid-template-columns: 0 auto 0;
   grid-template-rows: var(--header-size) auto var(--footer-size);
 }
@@ -58,8 +57,8 @@ body {
   overflow: hidden;
 }
 
-.footer {
-  grid-area: footer;
+.hand {
+  grid-area: hand;
   border-style: solid;
   border-width: 16px;
   -o-border-image: url("/src/assets/uiSprites/RectangleBox_96x96.png");
@@ -82,7 +81,7 @@ button.discard {
   width: 100px;
   height: 80px;
   top: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(0, -50%);
   transition: all 25ms linear;
 }
 button.draw:hover,
@@ -113,11 +112,11 @@ button.discard:hover::after {
 }
 
 button.draw {
-  left: 10%;
+  left: 5%;
 }
 
 button.discard {
-  right: 10%;
+  right: 5%;
 }
 
 .side1 {

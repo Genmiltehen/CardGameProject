@@ -1,4 +1,4 @@
-import { shuffleArray } from "../libs/utils.js";
+import { methodBind, shuffleArray } from "../libs/utils.js";
 import { createGameEvent } from "../manager/eventSystem.js";
 
 export class PlayerFighter {
@@ -20,6 +20,7 @@ export class PlayerFighter {
 	 * @param {PlayerData} playerData
 	 */
 	constructor(manager, playerData) {
+		methodBind(this);
 		this.manager = manager;
 
 		this.hand = [];
@@ -47,32 +48,47 @@ export class PlayerFighter {
 		}
 		const card = this.drawPile.pop();
 		if (card != null) {
+			this.hand.push(card);
+
 			const event = createGameEvent("CARD_DRAWN", { drawnCard: card, player: this });
 			this.manager.eventSystem.dispatchEvent(event);
+		}
+	}
 
-			this.hand.push(card);
+	/** @param {number} n */
+	__drawTimeout(n) {
+		if (n > 0) {
+			this.draw();
+			window.setTimeout(this.__drawTimeout, 100, n - 1);
 		}
 	}
 
 	drawHand() {
-		for (let i = 0; i < this.drawAmount; i++) this.draw();
+		this.__drawTimeout(this.drawAmount);
 	}
 
 	/** @param {CardBase} card */
 	discard(card) {
-		if (!this.discardPile.includes(card)) throw new Error("Card not in hand to discard");
+		if (!this.hand.includes(card)) throw new Error("Card not in hand to discard");
 
-		this.discardPile.splice(this.discardPile.indexOf(card), 1);
+		this.hand.splice(this.hand.indexOf(card), 1);
+		this.discardPile.push(card);
 
 		const event = createGameEvent("CARD_DISCARDED", { discardedCard: card });
 		this.manager.eventSystem.dispatchEvent(event);
+	}
 
-		this.drawPile.push(card);
+	__discardTimeout() {
+		const card = this.hand.at(-1);
+				
+		if (card != null) {
+			this.discard(card);
+			window.setTimeout(this.__discardTimeout, 100);
+		}
 	}
 
 	discardHand() {
-		let card;
-		while ((card = this.discardPile.pop())) this.discard(card);
+		this.__discardTimeout();
 	}
 
 	moveDiscardToDraw() {

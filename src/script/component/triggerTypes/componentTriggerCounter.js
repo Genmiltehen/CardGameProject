@@ -35,7 +35,7 @@ export class ComponentTriggerCounter extends componentTriggerBase {
 		});
 
 		/** @type {?HTMLDivElement} */
-		const hostContainer = this.host.uiData.container.querySelector("div.cardInsHolder");
+		const hostContainer = this.host.container.querySelector("div.cardInsHolder");
 		if (hostContainer == null) throw new Error("How? [host card has no conrainer]");
 		hostContainer.appendChild(this.#mainContainer);
 	}
@@ -67,7 +67,7 @@ export class ComponentTriggerCounter extends componentTriggerBase {
 			current: this.current + 1,
 		});
 		if (this.current == this.maximum) {
-			const event = createGameEvent("TRIGGER_COUNTER", this.host, { counter: this });
+			const event = createGameEvent("TRIGGER_COUNTER", { counter: this });
 			this.host.mgr.eventSystem.dispatchEvent(event)
 		}
 	}

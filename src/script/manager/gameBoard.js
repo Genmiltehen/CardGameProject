@@ -51,7 +51,7 @@ export class GameBoard {
 		if (this.cardsOnBoard == null) throw new Error("[gameBoard]: No gameManager is bound");
 
 		if (!this.cardsOnBoard.includes(card)) throw new Error(`Removing card that is not on board`);
-		card.uiData.container.remove();
+		card.container.remove();
 
 		if (card.cardBoardPosition == null) throw new Error("How? [no position when removing card from board]");
 		const pos = card.cardBoardPosition;

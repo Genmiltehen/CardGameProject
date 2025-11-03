@@ -27,7 +27,7 @@ export class ComponentHealthOrganic extends ComponentHealthBase {
 		});
 
 		/** @type {?HTMLDivElement} */
-		const hostContainer = this.host.uiData.container.querySelector("div.cardInsHolder");
+		const hostContainer = this.host.container.querySelector("div.cardInsHolder");
 		if (hostContainer == null) throw new Error("How? [host card has no conrainer]");
 		hostContainer.appendChild(this.#mainContainer);
 	}

@@ -5,6 +5,8 @@ import { UIBoard } from "./uiBoard.js";
 export class UIManager {
 	/** @type {HTMLDivElement} */
 	boardDiv;
+	/** @type {HTMLDivElement} */
+	handDiv;
 	/** @type {?GameManager} */
 	#manager;
 
@@ -20,6 +22,11 @@ export class UIManager {
 		if (mainDiv == null) throw new Error("Main Div is not found");
 		this.boardDiv = mainDiv;
 
+		/** @type {?HTMLDivElement} */
+		const handDiv = hostWindow.querySelector("div.hand");
+		if (handDiv == null) throw new Error("Main Div is not found");
+		this.handDiv = handDiv;
+
 		this.uiBoard = new UIBoard(this);
 
 		window.addEventListener("resize", this.evResize);
@@ -29,6 +36,7 @@ export class UIManager {
 	bindGameManager(gameManager) {
 		this.#manager = gameManager;
 		this.#manager.eventSystem.addListener("CARD_DRAWN", this.evGCardDrawn);
+		this.#manager.eventSystem.addListener("CARD_DISCARDED", this.evGCardDiscarded);
 
 		this.uiBoard.init();
 	}
@@ -41,6 +49,19 @@ export class UIManager {
 
 	updateUI() {
 		this.uiBoard.updateUI();
+		this.updateHandUI();
+	}
+
+	updateHandUI() {
+		const hand = this.gameManager.player.hand;
+		hand.forEach((card) => {
+			const handLengthM_1 = hand.length - 1;
+			const inHandIndex = hand.indexOf(card);
+
+			const rel = handLengthM_1 == 0 ? 0 : (2 * inHandIndex - handLengthM_1) / handLengthM_1;
+
+			card.container.style.setProperty("--value", rel.toString());
+		});
 	}
 
 	evResize() {
@@ -50,10 +71,29 @@ export class UIManager {
 	/** @type {EV_CallbackEventListener<"CARD_DRAWN">} */
 	evGCardDrawn(event) {
 		const card = event.data.drawnCard;
-		this.boardDiv.appendChild(card.uiData.container);
+		card.container.classList.remove("fixedCard");
+		card.container.style.setProperty("left", "0%");
 
-		event.data.player.hand;
-		const handLen = event.data.player.hand.length;
-		const inHandIndex = event.data.player.hand.indexOf(event.data.drawnCard);
+		this.handDiv.appendChild(card.container);
+
+		window.setTimeout(() => {
+			card.container.style.removeProperty("left");
+			card.container.classList.add("onHand");
+			this.updateHandUI();
+		}, 100);
+	}
+
+	/** @type {EV_CallbackEventListener<"CARD_DISCARDED">} */
+	evGCardDiscarded(event) {
+		const card = event.data.discardedCard;
+		card.container.style.setProperty("left", "100%");
+		card.container.style.setProperty("pointer-events", "none");
+		card.container.classList.remove("onHand");
+		
+		window.setTimeout(() => {
+			card.container.remove();
+			card.container.style.removeProperty("left");
+			card.container.style.removeProperty("pointer-events");
+		}, 200);
 	}
 }

@@ -59,8 +59,8 @@ export class UIBoard {
 	updateCard(card) {
 		if (card.cardBoardPosition == null) throw new Error("Updating cardEntity that is not on board");
 
-		if (!this.uiManager.boardDiv.contains(card.uiData.container)) {
-			this.uiManager.boardDiv.appendChild(card.uiData.container);
+		if (!this.uiManager.boardDiv.contains(card.container)) {
+			this.uiManager.boardDiv.appendChild(card.container);
 		}
 
 		card.uiData.set({
@@ -78,7 +78,7 @@ export class UIBoard {
 
 		/** @type {NodeListOf<HTMLDivElement>} */
 		const cardContainerMainNodeList = this.uiManager.boardDiv.querySelectorAll("div.cardUImain");
-		const cardContainerBoardArray = this.gameBoard.cardsOnBoard.map((card) => card.uiData.container);
+		const cardContainerBoardArray = this.gameBoard.cardsOnBoard.map((card) => card.container);
 
 		cardContainerMainNodeList.forEach((elem) => {
 			if (!cardContainerBoardArray.includes(elem)) {
@@ -141,7 +141,7 @@ class PseudoCardElement {
 		this.size = new _v(this.uiBoard.cardWidth, this.uiBoard.cardHeight);
 		this.boardPos = pos;
 		// @ts-ignore
-		this.container = createElement(`div.${classname}`);
+		this.container = createElement(`div.${classname}.cardGeneral`);
 	}
 
 	reload() {

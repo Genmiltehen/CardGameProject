@@ -28,7 +28,7 @@ export class CardSolider extends CardEntity {
 		});
 		methodBind(this);
 		this.uiData.sprite.setDefaultAnimation("idle", 0.6);
-		this.uiData.sprite.playDefaultAnimation();
+		// this.uiData.sprite.playDefaultAnimation();
 
 		const health = new ComponentHealthOrganic(this, { maxHealth: 10 });
 		this.components.add(health);

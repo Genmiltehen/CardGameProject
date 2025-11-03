@@ -20,8 +20,8 @@ export class CardBase {
 	/** @type {ComponentList} */
 	components;
 
-	/** 
-	 * @param {GameManager} manager 
+	/**
+	 * @param {GameManager} manager
 	 * @param {CardBaseInitValues} data
 	 */
 	constructor(manager, data) {
@@ -36,8 +36,12 @@ export class CardBase {
 		this.uiData.set({ name: this.name });
 	}
 
+	get container() {
+		return this.uiData.container;
+	}
+
 	/** @param {boardPos} pos */
-	validatePos(pos){
+	validatePos(pos) {
 		return false;
 	}
 }

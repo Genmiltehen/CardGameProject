@@ -15,6 +15,10 @@ if (base == null) throw new Error("die");
 const drawButton = document.querySelector("button.draw");
 if (drawButton == null) throw new Error("die");
 
+/** @type {?HTMLDivElement} */
+const discardButton = document.querySelector("button.discard");
+if (discardButton == null) throw new Error("die");
+
 const pd = getSoliderPreset();
 
 const mgr = new GameManager(pd);
@@ -41,4 +45,8 @@ mgr.eventSystem.dispatchEvent(event);
 
 drawButton.addEventListener("click", () => {
 	mgr.player.drawHand();
+});
+
+discardButton.addEventListener("click", () => {
+	mgr.player.discardHand();
 });
