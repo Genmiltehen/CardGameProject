@@ -2,6 +2,10 @@ import { _v } from "../libs/_v.js";
 import { Sprite } from "../libs/ui/Sprite/Sprite.js";
 import { createElement, methodBind, RGBtoCssStr } from "../libs/utils.js";
 import { CardBase } from "./cardBase.js";
+import { CardEntity } from "./cardEntity.js";
+
+/** @typedef {"none"|"fixed"|"hand"} cardPositioning */
+/** @typedef {"none"|"locked"|"ready"|"selected"} cardState */
 
 const DEFAULT_CARD_SIZE = 200;
 
@@ -32,12 +36,17 @@ export class CardUI {
 	/** @type {boolean} */
 	isEnemyFlag;
 
+	/** @type {cardPositioning} */
+	positioning;
+	/** @type {cardState} */
+	state;
+
 	/**
 	 * @param {?CardBase} cardData
 	 * @param {spriteInitValues} spriteData
 	 */
 	constructor(spriteData, cardData) {
-		methodBind(this);
+		methodBind(this, "ev");
 		this.spriteData = spriteData;
 		if (cardData != null) {
 			this.cardData = cardData;
@@ -48,18 +57,23 @@ export class CardUI {
 		this.width = DEFAULT_CARD_SIZE * CardUI.aspectRatio;
 		this.isEnemyFlag = false;
 
-		const imgHolder = createElement("div.imgHolder");
-		// @ts-ignore
-		this.sprite = new Sprite(imgHolder);
-		this.sprite.bindSprite(this.spriteData);
+		this.positioning = "none";
+		this.state = "none";
 
-		this.container = createElement("div.cardUImain", { fontSize: `${this.height / 20}px` }, {}, [
+		const imgHolder = createElement("div.imgHolder");
+		this.container = createElement("div.card", { fontSize: `${this.height / 20}px` }, { positioning: "none" }, [
 			createElement("div.cardInsHolder", {}, {}, [
 				imgHolder,
 				createElement("div.cardName", {}, { innerText: "name" }),
 				createElement("div.cardDesc", {}, { innerText: "balls" }),
 			]),
 		]);
+
+		// @ts-ignore
+		this.sprite = new Sprite(imgHolder);
+		this.sprite.bindSprite(this.spriteData);
+
+		this.container.addEventListener("click", this.evUIClick);
 
 		this.reloadCss();
 	}
@@ -71,7 +85,8 @@ export class CardUI {
 	 * @param {string} [values.descString]
 	 * @param {string} [values.name]
 	 * @param {boolean} [values.isEnemy]
-	 * @param {boolean} [values.isFixed]
+	 * @param {cardPositioning} [values.positioning]
+	 * @param {cardState} [values.state]
 	 * @param {Object} [values.colorPallete]
 	 * @param {number[]} values.colorPallete.primary
 	 */
@@ -103,23 +118,47 @@ export class CardUI {
 		if (values.isEnemy != null) {
 			this.isEnemyFlag = values.isEnemy;
 		}
-		if (values.isFixed != null) {
-			if (values.isFixed) this.container.classList.add("fixedCard");
-			else this.container.classList.remove("fixedCard");
+		if (values.positioning != null) {
+			this.positioning = values.positioning;
+		}
+		if (values.state != null) {
+			this.state = values.state;
 		}
 		this.reloadCss();
 	}
 
 	reloadCss() {
-		if (this.isEnemyFlag) this.container.classList.add("enemy");
-		if (!this.isEnemyFlag) this.container.classList.remove("enemy");
+		const isEnemy = this.cardData instanceof CardEntity ? this.cardData.isEnemy : this.isEnemyFlag;
+		if (isEnemy) this.container.classList.add("enemy");
+		if (!isEnemy) this.container.classList.remove("enemy");
+
+		this.container.setAttribute("positioning", this.positioning);
+		this.container.setAttribute("state", this.state);
+
 		const CStyle = this.container.style;
 		CStyle.fontSize = `${this.height / 20}px`;
 		CStyle.height = `${this.height}px`;
 		CStyle.width = `${Math.round(this.height * CardUI.aspectRatio)}px`;
 	}
-}
 
-/**
- 
- */
+	/** @param {PointerEvent} event */
+	evUIClick(event) {
+		const card = this.cardData;
+		if (card == null) return false;
+
+		const player = card.boundPlayer;
+		if (player == null) return false;
+
+		if (player.hand.includes(card)) {
+			const flag = card.uiData.state == "selected";
+			player.hand.forEach((hCard) => {
+				hCard.uiData.set({ state: "ready" });
+			});
+			if (flag) card.mgr.uiManager.deselectInputCard();
+			else card.mgr.uiManager.selectInputCard(card);
+		}
+
+		if (player.hand.includes(card)) {
+		}
+	}
+}

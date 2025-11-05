@@ -1,6 +1,6 @@
 /** @typedef {import("./componentTriggerCounter").ComponentTriggerCounter} ComponentTriggerCounter */
 
 /**
- * @typedef TriggerCounterData
+ * @typedef DataTriggerCounter
  * @property {ComponentTriggerCounter} counter
  */

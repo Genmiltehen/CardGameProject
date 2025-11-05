@@ -68,7 +68,7 @@ export class ComponentTriggerCounter extends componentTriggerBase {
 		});
 		if (this.current == this.maximum) {
 			const event = createGameEvent("TRIGGER_COUNTER", { counter: this });
-			this.host.mgr.eventSystem.dispatchEvent(event)
+			this.host.mgr.eventSystem.dispatch(event)
 		}
 	}
 }

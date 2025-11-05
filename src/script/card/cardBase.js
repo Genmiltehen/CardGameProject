@@ -2,23 +2,21 @@ import { ComponentList } from "../component/componentList.js";
 import { boardPos, methodBind } from "../libs/utils.js";
 import { CardUI } from "./cardUI.js";
 
-/**
- * @typedef {{
- *  spriteInitValues: spriteInitValues,
- *  name: string,
- * }} CardBaseInitValues
- */
-
 export class CardBase {
 	/** @type {string} */
 	name;
 
 	/** @type {CardUI} */
 	uiData;
+	/** @type {?PlayerFighter} */
+	boundPlayer;
 	/** @type {GameManager} */
 	mgr;
+
 	/** @type {ComponentList} */
 	components;
+	/** @type {InputTargetType} */
+	inputTargetType;
 
 	/**
 	 * @param {GameManager} manager
@@ -28,12 +26,13 @@ export class CardBase {
 		methodBind(this);
 		this.name = data.name;
 
-		this.components = new ComponentList();
-
+		this.boundPlayer = null;
 		this.mgr = manager;
-
 		this.uiData = new CardUI(data.spriteInitValues, this);
 		this.uiData.set({ name: this.name });
+
+		this.components = new ComponentList();
+		this.inputTargetType = "NONE";
 	}
 
 	get container() {

@@ -20,6 +20,9 @@ const SOLIDER_SPRITE_VALUES = {
 };
 
 export class CardSolider extends CardEntity {
+	/** @type {InputTargetType} */
+	inputTargetType;
+
 	/**  @param {GameManager} mgr */
 	constructor(mgr) {
 		super(mgr, {
@@ -27,6 +30,9 @@ export class CardSolider extends CardEntity {
 			name: "solider",
 		});
 		methodBind(this);
+
+		this.inputTargetType = "ALLY_SIDE";
+
 		this.uiData.sprite.setDefaultAnimation("idle", 0.6);
 		// this.uiData.sprite.playDefaultAnimation();
 
@@ -36,17 +42,17 @@ export class CardSolider extends CardEntity {
 
 		const counter = new ComponentTriggerCounter(this, { maxCounter: 5 });
 		this.components.add(counter);
-		this.mgr.eventSystem.addListener("TICK", this.evGTick);
+		this.mgr.eventSystem.addListener("CARD_TICK", this.evGTick);
 	}
 
-	/** @param {EV_GameEvent<"TICK">} [event] */
+	/** @param {GEV_Event<"CARD_TICK">} [event] */
 	evGTick(event) {
-		if (event != null && event.data.target != null) {
-			const target = event.data.target;
+		if (event != null && event.payload.target != null) {
+			const target = event.payload.target;
 			if (this === target) {
 				const counter = this.components.getFirst(ComponentTriggerCounter);
 				if (counter == null) throw new Error("counter is not found");
-				counter.advance()
+				counter.advance();
 			}
 		}
 	}

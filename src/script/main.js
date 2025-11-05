@@ -1,6 +1,6 @@
 import { CardSolider } from "./card/entities/cardSolider.js";
 import { _v } from "./libs/_v.js";
-import { boardPos } from "./libs/utils.js";
+import { boardPos as BoardPos } from "./libs/utils.js";
 import { createGameEvent } from "./manager/eventSystem.js";
 import { GameManager } from "./manager/gameManager.js";
 import { UIManager } from "./manager/uiManager.js";
@@ -25,28 +25,19 @@ const mgr = new GameManager(pd);
 const uiMgr = new UIManager(base);
 mgr.bindUIManager(uiMgr);
 
-const test_setup = [
-	{ pos: new boardPos(0, 0), name: "test_ally" },
-	{ pos: new boardPos(2, 1), name: "test_enemy" },
-];
-
-test_setup.forEach(({ pos: pos, name: name }) => {
-	const res = new CardSolider(mgr);
-	res.uiData.set({
-		descString: "god is angry",
-		position: mgr.uiManager.uiBoard.bottom_right,
-	});
-
-	mgr.gameBoard.placeCard(res, pos);
-});
-
-const event = createGameEvent("TICK_BOARD", {});
-mgr.eventSystem.dispatchEvent(event);
-
 drawButton.addEventListener("click", () => {
 	mgr.player.drawHand();
 });
 
 discardButton.addEventListener("click", () => {
 	mgr.player.discardHand();
+
+	// const a = mgr.gameBoard.allySide().forEach((bc) => {
+	// 	if (bc.card != null) {
+	// 		const np = new BoardPos(bc.pos.col - 1, bc.pos.row);
+	// 		mgr.gameBoard.placeCard(bc.card, np);
+	// 	}
+	// });
 });
+
+mgr.run();

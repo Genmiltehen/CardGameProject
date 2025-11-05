@@ -1,11 +1,11 @@
 export class CardEventSystem {
-	/** @type {Map<keyof EventDataMap, EV_CallbackEventListener<any>[]>} */
+	/** @type {Map<keyof GEV_DataMap, GEV_Listener<any>[]>} */
 	#listenerMap = new Map();
 
 	/**
-	 * @template {keyof EventDataMap} T
+	 * @template {keyof GEV_DataMap} T
 	 * @param {T} eventType
-	 * @param {EV_CallbackEventListener<T>} listener
+	 * @param {GEV_Listener<T>} listener
 	 */
 	addListener(eventType, listener) {
 		if (!this.#listenerMap.has(eventType)) {
@@ -17,9 +17,9 @@ export class CardEventSystem {
 	}
 
 	/**
-	 * @template {keyof EventDataMap} T
+	 * @template {keyof GEV_DataMap} T
 	 * @param {T} eventType
-	 * @param {EV_CallbackEventListener<T>} listener
+	 * @param {GEV_Listener<T>} listener
 	 */
 	removeListener(eventType, listener) {
 		const listeners = this.#listenerMap.get(eventType);
@@ -31,9 +31,9 @@ export class CardEventSystem {
 	}
 
 	/**
-	 * @param {EV_GameEvent<any>} event
+	 * @param {GEV_Event<any>} event
 	 */
-	dispatchEvent(event) {
+	dispatch(event) {
 		const eventListeners = this.#listenerMap.get(event.type) || [];
 		for (const callback of eventListeners) {
 			callback(event);
@@ -43,14 +43,14 @@ export class CardEventSystem {
 
 /**
  * Creates a game event with type-safe data based on the event type
- * @template {keyof EventDataMap} T
+ * @template {keyof GEV_DataMap} T
  * @param {T} event_type
- * @param {EventDataMap[T]} event_data
- * @returns {EV_GameEvent<T>}
+ * @param {GEV_DataMap[T]} event_data
+ * @returns {GEV_Event<T>}
  */
 export function createGameEvent(event_type, event_data) {
 	return {
 		type: event_type,
-		data: event_data,
+		payload: event_data,
 	};
 }

@@ -37,58 +37,77 @@ export class PlayerFighter {
 				card.components.add(componentModifier);
 			}
 			this.discardPile.push(card);
+			card.boundPlayer = this;
 		}
 	}
 
 	//TODOS: leave it be, (probably not finished)
 
 	draw() {
-		if (this.drawPile.length < 1) {
-			this.moveDiscardToDraw();
-		}
+		if (this.drawPile.length < 1) this.moveDiscardToDraw();
+
 		const card = this.drawPile.pop();
-		if (card != null) {
-			this.hand.push(card);
+		if (card == null) throw new Error("Trying from empty draw pile (probably exhausted inventory)");
 
-			const event = createGameEvent("CARD_DRAWN", { drawnCard: card, player: this });
-			this.manager.eventSystem.dispatchEvent(event);
-		}
+		this.hand.push(card);
+
+		const event = createGameEvent("CARD_DRAW_AFTER", { drawnCard: card, player: this });
+		this.manager.eventSystem.dispatch(event);
 	}
 
-	/** @param {number} n */
-	__drawTimeout(n) {
-		if (n > 0) {
+	/**
+	 * @param {number} cardNumber
+	 * @param {number} time
+	 */
+	__drawTimeout(cardNumber, time) {
+		if (cardNumber > 0) {
 			this.draw();
-			window.setTimeout(this.__drawTimeout, 100, n - 1);
+			window.setTimeout(this.__drawTimeout, time, cardNumber - 1, time);
+		} else {
+			const event = createGameEvent("HAND_DRAW_AFTER", { player: this });
+			this.manager.eventSystem.dispatch(event);
 		}
 	}
 
-	drawHand() {
-		this.__drawTimeout(this.drawAmount);
+	/** @param {number} [amount]  */
+	drawHand(amount) {
+		const _n = amount ?? this.drawAmount;
+		const time = 500 / _n;
+		this.__drawTimeout(_n, time);
+	}
+
+	/** @param {CardBase} card  */
+	removeFromHand(card) {
+		if (!this.hand.includes(card)) throw new Error("Card not in hand to discard");
+
+		this.hand.splice(this.hand.indexOf(card), 1);
 	}
 
 	/** @param {CardBase} card */
 	discard(card) {
-		if (!this.hand.includes(card)) throw new Error("Card not in hand to discard");
-
-		this.hand.splice(this.hand.indexOf(card), 1);
+		this.removeFromHand(card);
 		this.discardPile.push(card);
 
-		const event = createGameEvent("CARD_DISCARDED", { discardedCard: card });
-		this.manager.eventSystem.dispatchEvent(event);
+		const event = createGameEvent("CARD_DISCARD_AFTER", { discardedCard: card });
+		this.manager.eventSystem.dispatch(event);
 	}
 
-	__discardTimeout() {
+	/** @param {number} time */
+	__discardTimeout(time) {
 		const card = this.hand.at(-1);
-				
+
 		if (card != null) {
 			this.discard(card);
-			window.setTimeout(this.__discardTimeout, 100);
+			window.setTimeout(this.__discardTimeout, time, time);
+		} else {
+			const event = createGameEvent("HAND_DISCARD_AFTER", { player: this });
+			this.manager.eventSystem.dispatch(event);
 		}
 	}
 
 	discardHand() {
-		this.__discardTimeout();
+		const time = 500 / this.hand.length;
+		if (time != Infinity) this.__discardTimeout(time);
 	}
 
 	moveDiscardToDraw() {

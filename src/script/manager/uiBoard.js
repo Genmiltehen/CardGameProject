@@ -1,7 +1,11 @@
+import { CardEntity } from "../card/cardEntity.js";
 import { CardUI } from "../card/cardUI.js";
 import { _v } from "../libs/_v.js";
-import { boardPos, createElement, methodBind } from "../libs/utils.js";
+import { boardPos as BoardPos, createElement, methodBind } from "../libs/utils.js";
+import { createGameEvent } from "./eventSystem.js";
 import { UIManager } from "./uiManager.js";
+
+/** @typedef {"disabled" | "enabled" | "selected"} PCEState */
 
 /** @type {number} */
 const CARD_SIZE = 200;
@@ -38,12 +42,23 @@ export class UIBoard {
 		return this.uiManager.gameManager.gameBoard;
 	}
 
+	/**
+	 * @param {BoardPos} pos
+	 * @returns {CardPlaceholder}
+	 */
+	getPlaceholder(pos) {
+		if (this.#cardPlaceholders == null) throw new Error("UIManager is not bound [UIBoard]");
+		const _selected = this.#cardPlaceholders.filter((cph) => cph.pos?.col == pos.col && cph.pos?.row == pos.row);
+		if (_selected.length == 0) throw new Error(`no placeholder found at position ${pos}`);
+		return _selected[0];
+	}
+
 	init() {
 		this.#cardPlaceholders = [];
 
 		for (let i = 0; i < this.gameBoard.dims.col; i++) {
 			for (let j = 0; j < this.gameBoard.dims.row; j++) {
-				const cardPC = new CardPlaceholder(this, new boardPos(i, j));
+				const cardPC = new CardPlaceholder(this, new BoardPos(i, j));
 				this.#addPlaceholder(cardPC);
 			}
 		}
@@ -57,7 +72,7 @@ export class UIBoard {
 
 	/** @param {CardEntity} card*/
 	updateCard(card) {
-		if (card.cardBoardPosition == null) throw new Error("Updating cardEntity that is not on board");
+		if (card.pos == null) throw new Error("Updating cardEntity that is not on board");
 
 		if (!this.uiManager.boardDiv.contains(card.container)) {
 			this.uiManager.boardDiv.appendChild(card.container);
@@ -65,7 +80,7 @@ export class UIBoard {
 
 		card.uiData.set({
 			cardSize: this.cardHeight,
-			position: this.convertBoardToVector(card.cardBoardPosition),
+			position: this.convertBoardToVector(card.pos),
 		});
 	}
 
@@ -77,7 +92,7 @@ export class UIBoard {
 		this.bottom_right = this.top_left.add(new _v(comp_.width, comp_.height));
 
 		/** @type {NodeListOf<HTMLDivElement>} */
-		const cardContainerMainNodeList = this.uiManager.boardDiv.querySelectorAll("div.cardUImain");
+		const cardContainerMainNodeList = this.uiManager.boardDiv.querySelectorAll("div.card");
 		const cardContainerBoardArray = this.gameBoard.cardsOnBoard.map((card) => card.container);
 
 		cardContainerMainNodeList.forEach((elem) => {
@@ -104,8 +119,7 @@ export class UIBoard {
 	}
 
 	/**
-	 *
-	 * @param {boardPos} bPos
+	 * @param {BoardPos} bPos
 	 * @returns {_v}
 	 */
 	convertBoardToVector(bPos) {
@@ -123,8 +137,8 @@ export class UIBoard {
 }
 
 class PseudoCardElement {
-	/** @type {?boardPos} */
-	boardPos;
+	/** @type {?BoardPos} */
+	pos;
 	/** @type {HTMLDivElement} */
 	container;
 	/** @type {_v} */
@@ -132,14 +146,14 @@ class PseudoCardElement {
 
 	/**
 	 * @param {UIBoard} uiBoard
-	 * @param {?boardPos} pos
+	 * @param {?BoardPos} pos
 	 * @param {string} classname
 	 */
 	constructor(uiBoard, pos, classname) {
 		methodBind(this);
 		this.uiBoard = uiBoard;
 		this.size = new _v(this.uiBoard.cardWidth, this.uiBoard.cardHeight);
-		this.boardPos = pos;
+		this.pos = pos;
 		// @ts-ignore
 		this.container = createElement(`div.${classname}.cardGeneral`);
 	}
@@ -150,8 +164,8 @@ class PseudoCardElement {
 		PCEStyle.setProperty("width", `${this.size.x}px`);
 		PCEStyle.setProperty("height", `${this.size.y}px`);
 
-		if (this.boardPos !== null) {
-			const { x, y } = this.uiBoard.convertBoardToVector(this.boardPos);
+		if (this.pos !== null) {
+			const { x, y } = this.uiBoard.convertBoardToVector(this.pos);
 			PCEStyle.setProperty("--x", `${x}px`);
 			PCEStyle.setProperty("--y", `${y}px`);
 		}
@@ -159,34 +173,48 @@ class PseudoCardElement {
 }
 
 class CardPlaceholder extends PseudoCardElement {
+	/** @type {PCEState} */
+	state;
 	/**
 	 * @param {UIBoard} uiBoard
-	 * @param {boardPos} pos
+	 * @param {BoardPos} pos
 	 */
 	constructor(uiBoard, pos) {
 		super(uiBoard, pos, "cardPlaceholder");
-		methodBind(this);
+		methodBind(this, "ev");
 
-		this.container.addEventListener("mouseenter", this.EV_MouseEnter);
-		this.container.addEventListener("mouseleave", this.EV_MouseLeave);
+		this.state = "disabled";
+
+		this.container.addEventListener("mouseenter", this.evUIMouseEnter);
+		this.container.addEventListener("mouseleave", this.evUIMouseLeave);
+		this.container.addEventListener("click", this.evUIClick);
 	}
 
 	/**
 	 * @param {object} values
 	 * @param {_v} [values.size]
-	 * @param {boardPos} [values.bPos]
+	 * @param {BoardPos} [values.bPos]
+	 * @param {PCEState} [values.state]
 	 */
 	set(values) {
 		if (values.size != null) {
 			this.size = values.size;
 		}
 		if (values.bPos != null) {
-			this.boardPos = values.bPos;
+			this.pos = values.bPos;
+		}
+		if (values.state != null) {
+			this.state = values.state;
 		}
 		this.reload();
 	}
 
-	EV_MouseEnter() {
+	reload() {
+		super.reload();
+		this.container.setAttribute("state", this.state);
+	}
+
+	evUIMouseEnter() {
 		const sel = this.uiBoard.boardSelector;
 		if (sel == null) throw new Error("[cardPlaceholder]: GameManager is not bound");
 
@@ -195,27 +223,43 @@ class CardPlaceholder extends PseudoCardElement {
 			sel.fadeTimoutId = null;
 		}
 		sel.set({
-			bPos: this.boardPos,
-			active: true,
+			bPos: this.pos,
+			state: "enabled",
 		});
 	}
 
-	EV_MouseLeave() {
+	evUIMouseLeave() {
 		const sel = this.uiBoard.boardSelector;
 		if (sel == null) throw new Error("[cardPlaceholder]: GameManager is not bound");
 
 		sel.set({ bPos: null });
-		console.log("aaa");
 
 		sel.fadeTimoutId = window.setTimeout(() => {
-			if (sel.boardPos == null) sel.set({ active: false });
+			if (sel.pos == null) sel.set({ state: "disabled" });
 		}, 1000);
+	}
+
+	evUIClick() {
+		if (this.pos == null) throw new Error("How? [Clicked placeholder without position]");
+		if (this.uiBoard.uiManager.gameManager.state != "PLAYER_ACTION") return;
+
+		const selected = this.uiBoard.uiManager.selectedInputCard;
+		if (selected == null) return;
+		if (!(selected instanceof CardEntity))
+			throw new Error("How? [Clicked on placeholder but !CardEntity was selected]");
+
+		const event = createGameEvent("CARD_MOVE", {
+			from: "hand",
+			to: this.pos,
+			card: selected,
+		});
+		this.uiBoard.uiManager.gameManager.eventSystem.dispatch(event);
 	}
 }
 
 class CardSelector extends PseudoCardElement {
-	/** @type {boolean} */
-	active;
+	/** @type {PCEState} */
+	state;
 	/** @type {?number} */
 	fadeTimoutId;
 
@@ -225,32 +269,32 @@ class CardSelector extends PseudoCardElement {
 	constructor(uiBoard) {
 		super(uiBoard, null, "cardSelector");
 
-		this.boardPos = null;
-		this.active = false;
+		this.pos = null;
+		this.state = "disabled";
 		this.fadeTimoutId = null;
 	}
 
 	/**
 	 * @param {object} values
 	 * @param {_v} [values.size]
-	 * @param {boardPos | null} [values.bPos]
-	 * @param {boolean} [values.active]
+	 * @param {BoardPos | null} [values.bPos]
+	 * @param {PCEState} [values.state]
 	 */
 	set(values) {
 		if (values.size != null) {
 			this.size = values.size;
 		}
 		if (values.bPos !== undefined) {
-			this.boardPos = values.bPos;
+			this.pos = values.bPos;
 		}
-		if (values.active != null) {
-			this.active = values.active;
+		if (values.state != null) {
+			this.state = values.state;
 		}
 		this.reload();
 	}
 
 	reload() {
 		super.reload();
-		this.container.style.setProperty("--opacity", this.active ? "1" : "0");
+		this.container.setAttribute("state", this.state);
 	}
 }

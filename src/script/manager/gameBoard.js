@@ -32,10 +32,11 @@ export class GameBoard {
 
 		card.uiData.set({
 			isEnemy: pos.col >= this.dims.col / 2,
-			isFixed: true,
+			positioning: "fixed",
+			state: "locked",
 		});
 
-		card.cardBoardPosition = pos;
+		card.pos = pos;
 		this.cardsOnBoard.push(card);
 		this.setCard(pos, card);
 
@@ -51,11 +52,10 @@ export class GameBoard {
 		if (this.cardsOnBoard == null) throw new Error("[gameBoard]: No gameManager is bound");
 
 		if (!this.cardsOnBoard.includes(card)) throw new Error(`Removing card that is not on board`);
-		card.container.remove();
 
-		if (card.cardBoardPosition == null) throw new Error("How? [no position when removing card from board]");
-		const pos = card.cardBoardPosition;
-		card.cardBoardPosition = null;
+		if (card.pos == null) throw new Error("How? [no position when removing card from board]");
+		const pos = card.pos;
+		card.pos = null;
 		this.setCard(pos, null);
 
 		const idx = this.cardsOnBoard.indexOf(card);
@@ -90,70 +90,66 @@ export class GameBoard {
 
 	/**
 	 * @param {number} idx
-	 * @yields {iteratorResult}
+	 * @returns {BoardCell[]}
 	 */
-	*iterRow(idx) {
+	row(idx) {
+		const res = [];
 		for (let i = 0; i < this.dims.col; i++) {
 			const pos = new boardPos(i, idx);
-			yield {
+			res.push({
 				pos: pos,
 				card: this.getCard(pos),
-			};
+			});
 		}
+		return res;
 	}
 
 	/**
 	 * @param {number} idx
-	 * @yields {iteratorResult}
+	 * @returns {BoardCell[]}
 	 */
-	*iterCol(idx) {
+	col(idx) {
+		const res = [];
 		for (let i = 0; i < this.dims.row; i++) {
 			const pos = new boardPos(idx, i);
-			yield {
+			res.push({
 				pos: pos,
 				card: this.getCard(pos),
-			};
+			});
 		}
+		return res;
 	}
 
-	*iterEnemies() {
-		const enemy_half = this.dims.col / 2;
-		for (const col_id of new Array(enemy_half).keys()) {
-			const enemy_col_id = enemy_half + col_id;
-			yield* this.iterCol(enemy_col_id);
+	/** @returns {BoardCell[]} */
+	enemySide() {
+		/** @type {BoardCell[]} */
+		const res = [];
+		const half = this.dims.col / 2;
+		for (const col_id of new Array(half).keys()) {
+			const enemy_col_id = half + col_id;
+			res.push(...this.col(enemy_col_id));
 		}
+		return res;
 	}
 
-	*iterAllies() {
-		const enemy_half = this.dims.col / 2;
-		for (const col_id of new Array(enemy_half).keys()) {
-			const ally_col_id = enemy_half - col_id - 1;
-			yield* this.iterCol(ally_col_id);
+	/** @returns {BoardCell[]} */
+	allySide() {
+		/** @type {BoardCell[]} */
+		const res = [];
+		const half = this.dims.col / 2;
+		for (const col_id of new Array(half).keys()) {
+			const ally_col_id = half - col_id - 1;
+			res.push(...this.col(ally_col_id));
 		}
+		return res;
 	}
 
-	*iterFullBoard() {
-		yield* this.iterEnemies();
-		yield* this.iterAllies();
-	}
-
-	/** @param {"enemy"|"ally"|"full"} type */
-	*iterBoard(type) {
-		switch (type) {
-			case "enemy":
-				yield* this.iterEnemies();
-				break;
-
-			case "ally":
-				yield* this.iterAllies();
-				break;
-
-			case "ally":
-				yield* this.iterAllies();
-				break;
-
-			default:
-				break;
-		}
+	/** @returns {BoardCell[]} */
+	fullBoard() {
+		/** @type {BoardCell[]} */
+		const res = [];
+		res.push(...this.enemySide());
+		res.push(...this.allySide());
+		return res;
 	}
 }

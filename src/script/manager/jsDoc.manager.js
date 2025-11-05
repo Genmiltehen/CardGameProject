@@ -13,47 +13,96 @@
 /*                                   DEFINES                                  */
 /* -------------------------------------------------------------------------- */
 
+/* ------------------------------ HELPER TYPES ------------------------------ */
+
+/**
+ * @typedef BoardCell
+ * @property {boardPos} pos
+ * @property {?CardEntity} card
+ */
+
+/* ---------------------------------- STATE --------------------------------- */
+
+/**
+ * @typedef { "NONE"
+ * | "PLAYER_ACTION"
+ * } GameState
+ */
+
+/* ---------------------------------- EVENT --------------------------------- */
+
 /**
  * @typedef {{
- * TICK_BOARD: {},
- * TICK: TickData,
- * CARD_DRAWN: CardDrawnData,
- * CARD_DISCARDED: CardDiscardedData,
- * TRIGGER_COUNTER: TriggerCounterData, 
- * }} EventDataMap
+ * START: {},
+ * PLAYER_ACTION_START: DataPlayerActionStart,
+ * CARD_DRAW_AFTER: DataCardDrawAfter,
+ * HAND_DRAW_AFTER: DataHandDrawAfter,
+ * CARD_DISCARD_AFTER: DataCardDiscardAfter,
+ * HAND_DISCARD_AFTER: DataHandDiscardAfter
+ * CARD_MOVE: DataCardMove
+ * BOARD_TICK: {},
+ * CARD_TICK: DataCardTick,
+ * TRIGGER_COUNTER: DataTriggerCounter,
+ * }} GEV_DataMap
  */
 
 /**
- * @typedef TickData
- * @property {import("../libs/utils.js").boardPos} pos
- * @property {EV_TargetType} target
+ * @template {keyof GEV_DataMap} T
+ * @typedef GEV_Event
+ * @property {T} type
+ * @property {GEV_DataMap[T]} payload
  */
 
 /**
- * @typedef CardDrawnData
+ * @template {keyof GEV_DataMap} T
+ * @callback GEV_Listener
+ * @param {GEV_Event<T>} event
+ * @returns {void}
+ */
+
+/**
+ * @typedef {CardBase | GameManager | PlayerFighter} GEV_TargetType
+ */
+
+/* -------------------------------------------------------------------------- */
+/*                                DATA DEFINES                                */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @typedef DataPlayerActionStart
+ * @property {PlayerFighter} player
+ */
+
+/**
+ * @typedef DataCardDrawAfter
  * @property {CardBase} drawnCard
  * @property {PlayerFighter} player
  */
 
 /**
- * @typedef CardDiscardedData
+ * @typedef DataCardDiscardAfter
  * @property {CardBase} discardedCard
  */
 
 /**
- * @typedef {CardBase | GameManager | PlayerFighter} EV_TargetType
+ * @typedef DataHandDrawAfter
+ * @property {PlayerFighter} player
  */
 
 /**
- * @template {keyof EventDataMap} T
- * @typedef EV_GameEvent
- * @property {T} type
- * @property {EventDataMap[T]} data
+ * @typedef DataHandDiscardAfter
+ * @property {PlayerFighter} player
  */
 
 /**
- * @template {keyof EventDataMap} T
- * @callback EV_CallbackEventListener
- * @param {EV_GameEvent<T>} event
- * @returns {void}
+ * @typedef DataCardMove
+ * @property {"hand"|"board"} from
+ * @property {boardPos} to
+ * @property {CardEntity} card
+ */
+
+/**
+ * @typedef DataCardTick
+ * @property {boardPos} pos
+ * @property {GEV_TargetType} target
  */
