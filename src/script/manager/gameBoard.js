@@ -1,13 +1,13 @@
-import { boardPos } from "../libs/utils.js";
+import { BoardPos } from "../libs/utils.js";
 
 export class GameBoard {
-	/** @type {CardEntity[]} */
+	/** @type {Set<CardEntity>} */
 	cardsOnBoard;
 
 	/**
 	 * @constructor
 	 * @param {GameManager} gameManager
-	 * @param {boardPos} dims
+	 * @param {BoardPos} dims
 	 */
 	constructor(gameManager, dims) {
 		this.gameManager = gameManager;
@@ -15,20 +15,50 @@ export class GameBoard {
 		/** @type {(?CardEntity)[][]} */
 		this.arr = Array.from(Array(this.dims.row), () => new Array(this.dims.col).fill(null));
 
-		this.cardsOnBoard = [];
+		this.cardsOnBoard = new Set();
+	}
+
+	/**
+	 * @param {CardEntity} card1
+	 * @param {CardEntity} card2
+	 */
+	swapCards(card1, card2) {
+		console.log("aaa");
+		
+		if (!this.cardsOnBoard.has(card1)) {
+			console.log(card1);
+			throw new Error("card1 is not on board");
+		}
+		if (!this.cardsOnBoard.has(card2)) {
+			console.log(card2);
+			throw new Error("card2 is not on board");
+		}
+
+		if (card1.pos == null) throw new Error("How? [no position when removing card from board]");
+		if (card2.pos == null) throw new Error("How? [no position when removing card from board]");
+
+		const pos1 = card1.pos;
+		const pos2 = card2.pos;
+
+		this.setCard(pos2, card1);
+		this.setCard(pos1, card2);
+
+		const allyUIManager = this.gameManager.getUIManager("ally");
+		if (allyUIManager != null) {
+			allyUIManager.uiBoard.updateUI();
+		}
 	}
 
 	/**
 	 * @param {CardEntity} card
-	 * @param {boardPos} pos
+	 * @param {BoardPos} pos
 	 */
 	placeCard(card, pos) {
-		if (this.cardsOnBoard == null) throw new Error("[gameBoard]: No gameManager is bound");
-
 		if (!this.isValidPosition(pos)) throw new Error(`Cant place card at position ${pos}`);
 		if (this.getCard(pos) != null) throw Error(`Trying to place card where card already is: ${pos}`);
+		if (this.cardsOnBoard.has(card)) this.removeCard(card);
 
-		if (this.cardsOnBoard.includes(card)) this.removeCard(card);
+		this.setCard(pos, card);
 
 		card.uiData.set({
 			isEnemy: pos.col >= this.dims.col / 2,
@@ -36,34 +66,28 @@ export class GameBoard {
 			state: "locked",
 		});
 
-		card.pos = pos;
-		this.cardsOnBoard.push(card);
-		this.setCard(pos, card);
-
-		if (this.gameManager.uiManager != null) {
-			this.gameManager.uiManager.uiBoard.updateUI();
+		const allyUIManager = this.gameManager.getUIManager("ally");
+		if (allyUIManager != null) {
+			allyUIManager.uiBoard.updateUI();
 		}
 	}
 
-	/**
-	 * @param {CardEntity} card
-	 */
+	/** @param {CardEntity} card */
 	removeCard(card) {
-		if (this.cardsOnBoard == null) throw new Error("[gameBoard]: No gameManager is bound");
-
-		if (!this.cardsOnBoard.includes(card)) throw new Error(`Removing card that is not on board`);
-
+		if (!this.cardsOnBoard.has(card)) throw new Error(`Removing card that is not on board`);
 		if (card.pos == null) throw new Error("How? [no position when removing card from board]");
-		const pos = card.pos;
-		card.pos = null;
-		this.setCard(pos, null);
 
-		const idx = this.cardsOnBoard.indexOf(card);
-		if (idx > -1) this.cardsOnBoard.splice(idx, 1);
+		this.popCard(card.pos);
+
+		card.uiData.set({
+			isEnemy: false,
+			positioning: "none",
+			state: "none",
+		});
 	}
 
 	/**
-	 * @param {boardPos} pos
+	 * @param {BoardPos} pos
 	 * @returns {boolean}
 	 */
 	isValidPosition(pos) {
@@ -73,7 +97,7 @@ export class GameBoard {
 	}
 
 	/**
-	 * @param {boardPos} pos
+	 * @param {BoardPos} pos
 	 * @returns {?CardEntity}
 	 */
 	getCard(pos) {
@@ -81,11 +105,23 @@ export class GameBoard {
 	}
 
 	/**
-	 * @param {boardPos} pos
-	 * @param {?CardEntity} card
+	 * @param {BoardPos} pos
+	 * @param {CardEntity} card
 	 */
 	setCard(pos, card) {
+		this.cardsOnBoard.add(card);
 		this.arr[pos.row][pos.col] = card;
+		card.pos = pos;
+	}
+
+	/** @param {BoardPos} pos  */
+	popCard(pos) {
+		const oldCard = this.arr[pos.row][pos.col];
+		if (oldCard != null) {
+			this.cardsOnBoard.delete(oldCard);
+			oldCard.pos = null;
+			this.arr[pos.row][pos.col] = null;
+		}
 	}
 
 	/**
@@ -95,7 +131,7 @@ export class GameBoard {
 	row(idx) {
 		const res = [];
 		for (let i = 0; i < this.dims.col; i++) {
-			const pos = new boardPos(i, idx);
+			const pos = new BoardPos(i, idx);
 			res.push({
 				pos: pos,
 				card: this.getCard(pos),
@@ -111,7 +147,7 @@ export class GameBoard {
 	col(idx) {
 		const res = [];
 		for (let i = 0; i < this.dims.row; i++) {
-			const pos = new boardPos(idx, i);
+			const pos = new BoardPos(idx, i);
 			res.push({
 				pos: pos,
 				card: this.getCard(pos),

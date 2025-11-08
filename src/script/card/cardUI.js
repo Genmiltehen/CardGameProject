@@ -1,6 +1,7 @@
-import { _v } from "../libs/_v.js";
+import { CardMoveGEvent, CardSwapGEvent, GEventTypes, GUIEvent } from "../event/index.js";
+import { _v, createElement, methodBind, RGBtoCssStr } from "../libs/index.js";
 import { Sprite } from "../libs/ui/Sprite/Sprite.js";
-import { createElement, methodBind, RGBtoCssStr } from "../libs/utils.js";
+import { commonIS } from "../manager/helperUtils.js";
 import { CardBase } from "./cardBase.js";
 import { CardEntity } from "./cardEntity.js";
 
@@ -141,24 +142,40 @@ export class CardUI {
 		CStyle.width = `${Math.round(this.height * CardUI.aspectRatio)}px`;
 	}
 
-	/** @param {PointerEvent} event */
-	evUIClick(event) {
+	evUIClick() {
 		const card = this.cardData;
 		if (card == null) return false;
+		if (card.uiData.positioning == "none") return;
 
-		const player = card.boundPlayer;
-		if (player == null) return false;
+		const uiManager = card.uiManager;
 
-		if (player.hand.includes(card)) {
-			const flag = card.uiData.state == "selected";
-			player.hand.forEach((hCard) => {
-				hCard.uiData.set({ state: "ready" });
-			});
-			if (flag) card.mgr.uiManager.deselectInputCard();
-			else card.mgr.uiManager.selectInputCard(card);
-		}
+		const clickedPos = card.uiData.positioning;
+		const selected = uiManager.selectedInputCard;
 
-		if (player.hand.includes(card)) {
+		uiManager.lockGUI();
+		if (selected == card) {
+			uiManager.clearInputCard();
+			uiManager.unlockGUI();
+		} else if (selected == null) {
+			const uiState = clickedPos == "fixed" ? commonIS.onAllyBoard : card.inputTargetType;
+			uiManager.setUIState(uiState);
+			uiManager.setInputCard(card);
+		} else {
+			const selectedPos = selected.uiData.positioning;
+			if (selectedPos == "none") return;
+
+			if (selectedPos == "fixed") {
+				if (clickedPos == "fixed") {
+					const IEM = "How? [Trying to swap not CardEntity]";
+					if (!(card instanceof CardEntity) || !(selected instanceof CardEntity)) throw new Error(IEM);
+					uiManager.gameManager.eventSystem.dispatch(new CardSwapGEvent(card, selected));
+				} else {
+					const IEM = "How? [Imposible action: selected - on board, clicked - in hand]";
+					throw new Error(IEM);
+				}
+			} else {
+				console.debug("item card action here");
+			}
 		}
 	}
 }

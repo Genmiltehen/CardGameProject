@@ -1,5 +1,3 @@
-/** @typedef {import("./componentBase.js").ComponentBase} ComponentBase */
-
 export class ComponentList {
 	constructor() {
 		/** @type {ComponentBase[]} */

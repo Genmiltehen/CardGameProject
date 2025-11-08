@@ -3,6 +3,9 @@ import { GameManager } from "../../manager/gameManager.js";
 import { CardEntity } from "../cardEntity.js";
 import { ComponentTriggerCounter } from "../../component/triggerTypes/componentTriggerCounter.js";
 import { ComponentHealthOrganic } from "../../component/healthTypes/componentHealthOrganic.js";
+import { CardTickGEvent } from "../../event/eventTypes/cardTickEvent.js";
+import { GEventTypes } from "../../event/eventSystem.js";
+import { commonIS } from "../../manager/helperUtils.js";
 
 /** @type {spriteInitValues} */
 const SOLIDER_SPRITE_VALUES = {
@@ -19,19 +22,24 @@ const SOLIDER_SPRITE_VALUES = {
 	scale: 4,
 };
 
+/**
+ * @template {PlayerID} PID
+ * @extends CardEntity<PID>
+ */
 export class CardSolider extends CardEntity {
-	/** @type {InputTargetType} */
-	inputTargetType;
-
-	/**  @param {GameManager} mgr */
-	constructor(mgr) {
+	/**
+	 * @param {GameManager} mgr
+	 * @param {PID} playerId
+	 */
+	constructor(mgr, playerId) {
 		super(mgr, {
 			spriteInitValues: SOLIDER_SPRITE_VALUES,
 			name: "solider",
+			playerId: playerId,
 		});
 		methodBind(this);
 
-		this.inputTargetType = "ALLY_SIDE";
+		this.inputTargetType = commonIS.onAllyPlace;
 
 		this.uiData.sprite.setDefaultAnimation("idle", 0.6);
 		// this.uiData.sprite.playDefaultAnimation();
@@ -42,13 +50,13 @@ export class CardSolider extends CardEntity {
 
 		const counter = new ComponentTriggerCounter(this, { maxCounter: 5 });
 		this.components.add(counter);
-		this.mgr.eventSystem.addListener("CARD_TICK", this.evGTick);
+		this.manager.eventSystem.addListener(GEventTypes.CARD_TICK, this.evGTick);
 	}
 
-	/** @param {GEV_Event<"CARD_TICK">} [event] */
+	/** @param {CardTickGEvent} event */
 	evGTick(event) {
-		if (event != null && event.payload.target != null) {
-			const target = event.payload.target;
+		if (event != null && event.target != null) {
+			const target = event.target;
 			if (this === target) {
 				const counter = this.components.getFirst(ComponentTriggerCounter);
 				if (counter == null) throw new Error("counter is not found");

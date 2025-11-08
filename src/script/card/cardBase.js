@@ -1,45 +1,68 @@
 import { ComponentList } from "../component/componentList.js";
-import { boardPos, methodBind } from "../libs/utils.js";
+import { BoardPos, methodBind } from "../libs/utils.js";
+import { commonIS } from "../manager/helperUtils.js";
 import { CardUI } from "./cardUI.js";
 
+/** @template {PlayerID} [T=any] */
 export class CardBase {
 	/** @type {string} */
 	name;
+	/** @type {T} */
+	playerId;
 
 	/** @type {CardUI} */
 	uiData;
-	/** @type {?PlayerFighter} */
-	boundPlayer;
 	/** @type {GameManager} */
-	mgr;
+	manager;
 
 	/** @type {ComponentList} */
 	components;
-	/** @type {InputTargetType} */
+	/** @type {InteractivitySelector[]} */
 	inputTargetType;
 
 	/**
 	 * @param {GameManager} manager
-	 * @param {CardBaseInitValues} data
+	 * @param {CardBaseInitValues<T>} data
 	 */
 	constructor(manager, data) {
 		methodBind(this);
 		this.name = data.name;
+		this.playerId = data.playerId;
 
-		this.boundPlayer = null;
-		this.mgr = manager;
+		this.manager = manager;
 		this.uiData = new CardUI(data.spriteInitValues, this);
 		this.uiData.set({ name: this.name });
 
 		this.components = new ComponentList();
-		this.inputTargetType = "NONE";
+
+		this.inputTargetType = commonIS.offAll;
 	}
 
 	get container() {
 		return this.uiData.container;
 	}
 
-	/** @param {boardPos} pos */
+	/**
+	 * @readonly
+	 * @type {PlayerFighter<T>}
+	 */
+	get player() {
+		if (this.playerId == null) throw new Error("no bound player");
+		const player = this.manager.players[this.playerId];
+		return player;
+	}
+
+	/**
+	 * @readonly
+	 * @type {UIManager<"ally">}
+	 */
+	get uiManager() {
+		const uiManager = this.manager.getUIManager(this.playerId);
+		if (uiManager == null) throw new Error("UNIMPLEMENTED [multilayer]");
+		return uiManager;
+	}
+
+	/** @param {BoardPos} pos */
 	validatePos(pos) {
 		return false;
 	}

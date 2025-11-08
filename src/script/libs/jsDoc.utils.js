@@ -1,1 +1,1 @@
-/** @typedef {import("./utils.js").boardPos} boardPos */
+/** @typedef {import("./utils.js").BoardPos} BoardPos */

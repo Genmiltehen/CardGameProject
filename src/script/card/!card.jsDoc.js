@@ -2,8 +2,15 @@
 /*                                   IMPORTS                                  */
 /* -------------------------------------------------------------------------- */
 
-/** @typedef { import("./cardBase.js").CardBase } CardBase */
-/** @typedef { import("./cardEntity.js").CardEntity } CardEntity */
+/**
+ * @template {PlayerID} [T=any]
+ * @typedef { import("./cardBase.js").CardBase<T> } CardBase
+ */
+
+/**
+ * @template {PlayerID} [PID=any]
+ * @typedef { import("./cardEntity.js").CardEntity<PID> } CardEntity 
+ */
 
 /** @typedef { import("./cardUI.js").CardUI } CardUI */
 
@@ -11,20 +18,11 @@
 /*                                   DEFINES                                  */
 /* -------------------------------------------------------------------------- */
 
-/** 
- * @typedef { "NONE"
- * | "ALLY_SIDE"
- * | "ENEMY_SIDE"
- * | "ANY_SIDE"
- * | "ALLY_CARD"
- * | "ENEMY_CARD"
- * | "ANY_CARD"
- * } InputTargetType
- */
-
 /**
+ * @template {PlayerID} T
  * @typedef {{
  *  spriteInitValues: spriteInitValues,
  *  name: string,
+ *  playerId: T
  * }} CardBaseInitValues
  */

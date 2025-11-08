@@ -28,9 +28,12 @@
 }
 
 .card {
-  --center: translate(-50%, -60%);
-  --rotate: rotate(calc(12deg * var(--value)));
-  --default: var(--center) var(--rotate);
+  --center-hand: translate(-50%, -60%);
+  --rotate-hand: rotate(calc(12deg * var(--value)));
+  --default-hand: var(--center-hand) var(--rotate-hand);
+  --default-fixed: scale(1) translate(-50%, -50%) rotate(0deg);
+  --default: scale(1);
+  --selecetion-ascend: 0%;
   --value: 0;
   position: absolute;
   --x: 0px;
@@ -52,24 +55,33 @@
   left: var(--x);
   top: var(--y);
   display: block;
-  transform: scale(1) translate(-50%, -50%) rotate(0deg);
+  transform: var(--default-fixed);
+  --default: var(--default-fixed);
+  --selecetion-ascend: -10%;
+}
+.card[positioning=fixed]:hover {
+  transform: var(--default-fixed) translate(0, var(--selecetion-ascend));
+  z-index: 3;
 }
 .card[positioning=hand] {
   position: absolute;
   top: 50%;
   left: 50%;
   transform-origin: center 2000px;
-  transform: var(--default);
+  transform: var(--default-hand);
+  --default: var(--default-hand);
+  --selecetion-ascend: -20%;
 }
 .card[positioning=hand]:hover {
-  transform: var(--default) translate(0, -20%);
+  transform: var(--default-hand) translate(0, var(--selecetion-ascend));
   z-index: 3;
 }
 .card[state=locked] {
   pointer-events: none;
+  filter: brightness(0.6);
 }
 .card[state=selected] {
-  transform: var(--default) translate(0, -20%);
+  transform: var(--default) translate(0, var(--selecetion-ascend));
   z-index: 3;
 }
 .card[state=selected]::after {

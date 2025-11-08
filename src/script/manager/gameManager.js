@@ -1,88 +1,104 @@
-import { _v } from "../libs/_v.js";
-import { boardPos, methodBind } from "../libs/utils.js";
+import { CardTickGEvent, ManagerGEvent, PlayerGEvent, CardEventSystem, GEventTypes } from "../event/index.js";
+import { _v, BoardPos, methodBind } from "../libs/index.js";
 import { PlayerFighter } from "../player/playerFighter.js";
-import { CardEventSystem, createGameEvent } from "./eventSystem.js";
 import { GameBoard } from "./gameBoard.js";
-import { UIManager } from "./uiManager.js";
 
-const BOARD_SIZE = new boardPos(6, 2);
+const BOARD_SIZE = new BoardPos(6, 2);
 
 export class GameManager {
-	/** @type {?UIManager} */
-	#uiManager;
+	/**  @type {UIManagersType}  */
+	#uiManagers;
 	/** @type {GameBoard} */
 	gameBoard;
 	/** @type {CardEventSystem} */
 	eventSystem;
 
-	/** @type {PlayerFighter} */
-	player;
+	/** @type {{ [PID in PlayerID]: PlayerFighter<PID> }} */
+	players;
 
 	/** @type {GameState} */
 	state;
 
 	/**
-	 * @param {PlayerData} playerData
+	 * @param {PlayerData<"ally">} playerData
 	 */
 	constructor(playerData) {
 		methodBind(this, "ev");
 		this.gameBoard = new GameBoard(this, BOARD_SIZE);
 		this.eventSystem = new CardEventSystem();
-		this.#uiManager = null;
+		this.#uiManagers = { ally: null, enemy: null };
 
 		this.state = "NONE";
 
-		this.player = new PlayerFighter(this, playerData);
+		this.players = {
+			ally: new PlayerFighter(this, "ally", playerData),
+			enemy: new PlayerFighter(this, "enemy", { inventory: [] }),
+		};
 
 		this.#setupEvents();
 	}
 
-	/**
-	 * @readonly
-	 * @type {UIManager}
+	/** 
+	 * @template {PlayerID} T 
+	 * @param {T} playerId 
+	 * @returns {PlayerFighter<T>}
 	 */
-	get uiManager() {
-		if (this.#uiManager == null) throw new Error("UIManager is not bound");
-		return this.#uiManager;
+	getPlayer(playerId) {
+		return this.players[playerId]
 	}
 
-	/** @param {UIManager} uiManager */
-	bindUIManager(uiManager) {
-		this.#uiManager = uiManager;
-		this.#uiManager.bindGameManager(this);
+	/**
+	 * @template {PlayerID} T
+	 * @param {T} side
+	 */
+	getUIManager(side) {
+		if (side == "enemy") throw new Error("UNIMPLEMENTED [multiplayer]");
+		if (this.#uiManagers[side] == null) throw new Error("UIManager is not bound");
+		return this.#uiManagers[side];
+	}
+
+	/**
+	 * @template {PlayerID} T
+	 * @param {T} side
+	 * @param {UIManagersType[T]} uiManager
+	 */
+	bindUIManager(side, uiManager) {
+		this.#uiManagers[side] = uiManager;
+		if (this.#uiManagers[side] != null) {
+			this.#uiManagers[side].bindGameManager(this, "ally");
+		}
 	}
 
 	#setupEvents() {
-		this.eventSystem.addListener("BOARD_TICK", this.evGTickBoard);
-		this.eventSystem.addListener("START", this.evGStart);
-		this.eventSystem.addListener("PLAYER_ACTION_START", this.evGPlayerActionStart);
+		this.eventSystem.addListener(GEventTypes.START, this.evGStart);
+		this.eventSystem.addListener(GEventTypes.BOARD_TICK, this.evGTickBoard);
+		this.eventSystem.addListener(GEventTypes.REQUEST_PLAYER_ACTION, this.evGPlayerActionStart);
 	}
 
 	run() {
-		const event = createGameEvent("START", {});
+		const event = new ManagerGEvent(GEventTypes.START, this);
 		this.eventSystem.dispatch(event);
 	}
 
-	/** @type {GEV_Listener<"START">} */
-	evGStart() {
-		this.player.drawHand(1);
+	/** @param {StartGEvent} event */
+	evGStart(event) {
+		this.players.ally.drawHand(1);
 
-		const eventPlayerActionStart = createGameEvent("PLAYER_ACTION_START", { player: this.player });
+		const eventPlayerActionStart = new PlayerGEvent(GEventTypes.REQUEST_PLAYER_ACTION, this.players.ally);
 		this.eventSystem.dispatch(eventPlayerActionStart);
 	}
 
-	/** @type {GEV_Listener<"PLAYER_ACTION_START">} */
-	evGPlayerActionStart() {
+	/** @param {RequesPlayerActionGEvent} event */
+	evGPlayerActionStart(event) {
 		this.state = "PLAYER_ACTION";
-		this.uiManager.setInteractive("NONE");
 	}
 
-	/** @type {GEV_Listener<"BOARD_TICK">} */
-	evGTickBoard() {
+	/** @param {BoardTickGEvent} event */
+	evGTickBoard(event) {
 		this.gameBoard.fullBoard().forEach((boardCell) => {
 			if (boardCell.card != null) {
 				const pos = boardCell.pos;
-				const event = createGameEvent("CARD_TICK", { pos: pos, target: boardCell.card });
+				const event = new CardTickGEvent(pos, boardCell.card);
 				this.eventSystem.dispatch(event);
 			}
 		});

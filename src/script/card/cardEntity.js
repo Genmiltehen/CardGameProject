@@ -1,12 +1,16 @@
 import { CardBase } from "./cardBase.js";
 
+/**
+ * @template {PlayerID} [PID=any]
+ * @extends CardBase<PID>
+ */
 export class CardEntity extends CardBase {
-	/** @type {?boardPos} */
+	/** @type {?BoardPos} */
 	pos;
 
 	/**
 	 * @param {GameManager} manager
-	 * @param {CardBaseInitValues} base
+	 * @param {CardBaseInitValues<PID>} base
 	 */
 	constructor(manager, base) {
 		super(manager, base);
@@ -15,6 +19,6 @@ export class CardEntity extends CardBase {
 
 	/** @returns {boolean} */
 	get isEnemy() {
-		return this.pos?.col == null ? false : this.pos.col >= this.mgr.gameBoard.dims.col / 2;
+		return this.pos?.col == null ? false : this.pos.col >= this.manager.gameBoard.dims.col / 2;
 	}
 }

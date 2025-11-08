@@ -70,7 +70,7 @@ export function createElement(name, style, attributes, nested) {
 	return res;
 }
 
-export class boardPos {
+export class BoardPos {
 	/**
 	 * @constructor
 	 * @param {number} col

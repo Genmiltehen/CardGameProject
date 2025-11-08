@@ -1,8 +1,11 @@
 import { CardSolider } from "../card/entities/cardSolider.js";
 
-/** @returns {PlayerData}  */
+/**
+ * @template {PlayerID} T
+ * @returns {PlayerData<T>}
+ */
 export function getSoliderPreset() {
-	/** @type {CardInitData[]} */
+	/** @type {CardInitData<T>[]} */
 	const cards = [];
 	for (let i = 0; i < 40; i++) {
 		cards.push({

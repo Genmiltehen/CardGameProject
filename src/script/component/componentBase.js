@@ -1,4 +1,4 @@
-import { methodBind } from "../libs/utils.js";
+import { methodBind } from "../libs/index.js";
 import { CardBase } from "../card/cardBase.js";
 
 export class ComponentBase {

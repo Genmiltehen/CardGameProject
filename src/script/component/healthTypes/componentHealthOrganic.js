@@ -1,5 +1,5 @@
 import { ProgressBar } from "../../libs/ui/progressBar/progressBar.js";
-import { clamp, createElement, methodBind } from "../../libs/utils.js";
+import { createElement, methodBind } from "../../libs/index.js";
 import { CardBase } from "../../card/cardBase.js";
 import { ComponentHealthBase } from "./componentHealthBase.js";
 

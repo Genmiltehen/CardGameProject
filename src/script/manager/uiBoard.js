@@ -1,8 +1,6 @@
-import { CardEntity } from "../card/cardEntity.js";
-import { CardUI } from "../card/cardUI.js";
-import { _v } from "../libs/_v.js";
-import { boardPos as BoardPos, createElement, methodBind } from "../libs/utils.js";
-import { createGameEvent } from "./eventSystem.js";
+import { _v, BoardPos, createElement, methodBind } from "../libs/index.js";
+import { CardMoveGEvent, CardPlaceGEvent } from "../event/index.js";
+import { CardEntity, CardUI } from "../card/index.js";
 import { UIManager } from "./uiManager.js";
 
 /** @typedef {"disabled" | "enabled" | "selected"} PCEState */
@@ -21,6 +19,7 @@ export class UIBoard {
 	 * @param {UIManager} uiManager
 	 */
 	constructor(uiManager) {
+		methodBind(this, "get");
 		this.uiManager = uiManager;
 
 		this.#cardPlaceholders = null;
@@ -92,13 +91,11 @@ export class UIBoard {
 		this.bottom_right = this.top_left.add(new _v(comp_.width, comp_.height));
 
 		/** @type {NodeListOf<HTMLDivElement>} */
-		const cardContainerMainNodeList = this.uiManager.boardDiv.querySelectorAll("div.card");
-		const cardContainerBoardArray = this.gameBoard.cardsOnBoard.map((card) => card.container);
+		const cardUIsMainNodeList = this.uiManager.boardDiv.querySelectorAll("div.card");
+		const cardUIsOnBoardArray = Array.from(this.gameBoard.cardsOnBoard).map((card) => card.container);
 
-		cardContainerMainNodeList.forEach((elem) => {
-			if (!cardContainerBoardArray.includes(elem)) {
-				elem.remove();
-			}
+		cardUIsMainNodeList.forEach((elem) => {
+			if (!cardUIsOnBoardArray.includes(elem)) elem.remove();
 		});
 
 		for (const card of this.gameBoard.cardsOnBoard) {
@@ -240,20 +237,28 @@ class CardPlaceholder extends PseudoCardElement {
 	}
 
 	evUIClick() {
+		const eventSystem = this.uiBoard.uiManager.gameManager.eventSystem;
+
 		if (this.pos == null) throw new Error("How? [Clicked placeholder without position]");
 		if (this.uiBoard.uiManager.gameManager.state != "PLAYER_ACTION") return;
 
 		const selected = this.uiBoard.uiManager.selectedInputCard;
 		if (selected == null) return;
-		if (!(selected instanceof CardEntity))
-			throw new Error("How? [Clicked on placeholder but !CardEntity was selected]");
 
-		const event = createGameEvent("CARD_MOVE", {
-			from: "hand",
-			to: this.pos,
-			card: selected,
-		});
-		this.uiBoard.uiManager.gameManager.eventSystem.dispatch(event);
+		const selectedPos = selected.uiData.positioning;
+		if (selectedPos == "none") return;
+
+		if (selected instanceof CardEntity) {
+			if (selected.playerId == null) throw new Error("Card has no bound player");
+			if (selectedPos == "hand") {
+				eventSystem.dispatch(new CardPlaceGEvent(selected, this.pos));
+				// TODO: Add Finish Player Action Event
+			} else {
+				eventSystem.dispatch(new CardMoveGEvent(selected, this.pos));
+			}
+		} else {
+			console.debug("card action here");
+		}
 	}
 }
 

@@ -1,7 +1,7 @@
 import { methodBind } from "../../libs/utils.js";
 import { ComponentBase } from "../componentBase.js";
 
-export class componentTriggerBase extends ComponentBase {
+export class ComponentTriggerBase extends ComponentBase {
 	/**
 	 * @constructor
 	 * @param {CardEntity} host

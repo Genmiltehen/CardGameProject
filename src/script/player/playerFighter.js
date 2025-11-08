@@ -1,47 +1,58 @@
+import { CardInteractionGEvent, PlayerGEvent } from "../event/index.js";
+import { GEventTypes } from "../event/eventSystem.js";
 import { methodBind, shuffleArray } from "../libs/utils.js";
-import { createGameEvent } from "../manager/eventSystem.js";
 
+/** @template {PlayerID} T */
 export class PlayerFighter {
-	/** @type {CardBase[]} */
+	/** @readonly @type {CardBase<T>[]} */
+	cards;
+	/** @type {CardBase<T>[]} */
 	hand;
-	/** @type {CardBase[]} */
+	/** @type {CardBase<T>[]} */
 	discardPile;
-	/** @type {CardBase[]} */
+	/** @type {CardBase<T>[]} */
 	drawPile;
 
 	/** @type {number} */
 	drawAmount;
+	/** @type {T} */
+	playerId;
 
 	/**  @type {GameManager} */
 	manager;
 
 	/**
 	 * @param {GameManager} manager
-	 * @param {PlayerData} playerData
+	 * @param {T} playerID
+	 * @param {PlayerData<T>} playerData
 	 */
-	constructor(manager, playerData) {
+	constructor(manager, playerID, playerData) {
 		methodBind(this);
 		this.manager = manager;
 
-		this.hand = [];
-		this.drawPile = [];
-
 		this.drawAmount = 6;
+		this.playerId = playerID;
 
-		this.discardPile = [];
+		this.cards = [];
 		for (const cardInitData of playerData.inventory) {
-			const card = new cardInitData.cardType(manager);
+			const card = new cardInitData.cardType(manager, playerID);
 			for (const componentModifierData of cardInitData.componentModifiersData) {
 				const args = componentModifierData.constructorArgs;
 				const componentModifier = new componentModifierData.componentType(card, args);
 				card.components.add(componentModifier);
 			}
-			this.discardPile.push(card);
-			card.boundPlayer = this;
+			this.cards.push(card);
 		}
-	}
 
-	//TODOS: leave it be, (probably not finished)
+		this.hand = [];
+		this.drawPile = [];
+		this.discardPile = [];
+		this.cards.forEach((card) => {
+			this.discardPile.push(card);
+		});
+	}
+	
+	//TODO: leave it be, (probably not finished)
 
 	draw() {
 		if (this.drawPile.length < 1) this.moveDiscardToDraw();
@@ -51,7 +62,7 @@ export class PlayerFighter {
 
 		this.hand.push(card);
 
-		const event = createGameEvent("CARD_DRAW_AFTER", { drawnCard: card, player: this });
+		const event = new CardInteractionGEvent(GEventTypes.CARD_DRAW, card, this);
 		this.manager.eventSystem.dispatch(event);
 	}
 
@@ -64,7 +75,7 @@ export class PlayerFighter {
 			this.draw();
 			window.setTimeout(this.__drawTimeout, time, cardNumber - 1, time);
 		} else {
-			const event = createGameEvent("HAND_DRAW_AFTER", { player: this });
+			const event = new PlayerGEvent(GEventTypes.HAND_DRAW, this);
 			this.manager.eventSystem.dispatch(event);
 		}
 	}
@@ -76,19 +87,19 @@ export class PlayerFighter {
 		this.__drawTimeout(_n, time);
 	}
 
-	/** @param {CardBase} card  */
+	/** @param {CardBase<T>} card  */
 	removeFromHand(card) {
 		if (!this.hand.includes(card)) throw new Error("Card not in hand to discard");
 
 		this.hand.splice(this.hand.indexOf(card), 1);
 	}
 
-	/** @param {CardBase} card */
+	/** @param {CardBase<T>} card */
 	discard(card) {
 		this.removeFromHand(card);
 		this.discardPile.push(card);
 
-		const event = createGameEvent("CARD_DISCARD_AFTER", { discardedCard: card });
+		const event = new CardInteractionGEvent(GEventTypes.CARD_DISCARD, card, this);
 		this.manager.eventSystem.dispatch(event);
 	}
 
@@ -100,7 +111,7 @@ export class PlayerFighter {
 			this.discard(card);
 			window.setTimeout(this.__discardTimeout, time, time);
 		} else {
-			const event = createGameEvent("HAND_DISCARD_AFTER", { player: this });
+			const event = new PlayerGEvent(GEventTypes.HAND_DISCARD, this);
 			this.manager.eventSystem.dispatch(event);
 		}
 	}

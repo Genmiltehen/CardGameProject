@@ -1,9 +1,9 @@
 import { ProgressBarSteps } from "../../libs/ui/progressBarTicks/progressBarTicks.js";
 import { createElement, methodBind, clamp } from "../../libs/utils.js";
-import { createGameEvent } from "../../manager/eventSystem.js";
-import { componentTriggerBase } from "./componentTriggerBase.js";
+import { ComponentTriggerBase } from "./componentTriggerBase.js";
+import { CounterGEvent } from "./triggerEvents.js";
 
-export class ComponentTriggerCounter extends componentTriggerBase {
+export class ComponentTriggerCounter extends ComponentTriggerBase {
 	/** @type {number} */
 	maximum;
 	/** @type {number} */
@@ -67,8 +67,7 @@ export class ComponentTriggerCounter extends componentTriggerBase {
 			current: this.current + 1,
 		});
 		if (this.current == this.maximum) {
-			const event = createGameEvent("TRIGGER_COUNTER", { counter: this });
-			this.host.mgr.eventSystem.dispatch(event)
+			this.host.manager.eventSystem.dispatch(new CounterGEvent(this));
 		}
 	}
 }

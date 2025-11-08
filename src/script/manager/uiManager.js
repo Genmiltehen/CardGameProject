@@ -1,7 +1,11 @@
+import { GEventTypes } from "../event/eventSystem.js";
+import { GUIEvent } from "../event/index.js";
 import { _v } from "../libs/_v.js";
-import { boardPos, methodBind } from "../libs/utils.js";
+import { methodBind } from "../libs/utils.js";
+import { commonIS } from "./helperUtils.js";
 import { UIBoard } from "./uiBoard.js";
 
+/** @template {PlayerID} [T=any] */
 export class UIManager {
 	/** @type {HTMLDivElement} */
 	boardDiv;
@@ -9,8 +13,10 @@ export class UIManager {
 	handDiv;
 	/** @type {?GameManager} */
 	#manager;
+	/** @type {?PlayerFighter<T>} */
+	player;
 
-	/** @type {?CardBase} */
+	/** @type {?CardBase<T>} */
 	selectedInputCard;
 
 	/**
@@ -21,6 +27,7 @@ export class UIManager {
 		this.#manager = null;
 
 		this.selectedInputCard = null;
+		this.player = null;
 
 		/** @type {?HTMLDivElement} */
 		const mainDiv = hostWindow.querySelector("div.main");
@@ -37,14 +44,30 @@ export class UIManager {
 		window.addEventListener("resize", this.evUIResize);
 	}
 
-	/** @param {GameManager} gameManager */
-	bindGameManager(gameManager) {
+	/**
+	 * @param {GameManager} gameManager
+	 * @param {T} playerId
+	 */
+	bindGameManager(gameManager, playerId) {
 		this.#manager = gameManager;
-		this.#manager.eventSystem.addListener("CARD_DRAW_AFTER", this.evGCardDrawn);
-		this.#manager.eventSystem.addListener("CARD_DISCARD_AFTER", this.evGCardDiscarded);
-		this.#manager.eventSystem.addListener("HAND_DRAW_AFTER", this.evGHandDrawn);
-		this.#manager.eventSystem.addListener("HAND_DISCARD_AFTER", this.evGHandDiscarded);
-		this.#manager.eventSystem.addListener("CARD_MOVE", this.evGCardMove);
+		if (playerId == "enemy") throw new Error("UNIMPLEMENTED [Multiplayer]");
+		this.player = gameManager.players[playerId];
+		this.player.cards.forEach((card) => {
+			card.playerId = playerId;
+		});
+
+		this.#manager.eventSystem.addListener(GEventTypes.UNLOCK_GUI, this.evGUnlockGUIevent);
+		this.#manager.eventSystem.addListener(GEventTypes.LOCK_GUI, this.evGLockGUIevent);
+
+		this.#manager.eventSystem.addListener(GEventTypes.CARD_TRANSFER_SWAP, this.evGCardSwap);
+		this.#manager.eventSystem.addListener(GEventTypes.CARD_TRANSFER_MOVE, this.evGCardMove);
+		this.#manager.eventSystem.addListener(GEventTypes.CARD_TRANSFER_PLACE, this.evGCardPlace);
+
+		this.#manager.eventSystem.addListener(GEventTypes.CARD_DRAW, this.evGCardDraw);
+		this.#manager.eventSystem.addListener(GEventTypes.CARD_DISCARD, this.evGCardDiscarded);
+
+		this.#manager.eventSystem.addListener(GEventTypes.HAND_DRAW, this.evGHandDraw);
+		this.#manager.eventSystem.addListener(GEventTypes.HAND_DISCARD, this.evGHandDiscard);
 
 		this.uiBoard.init();
 	}
@@ -55,77 +78,65 @@ export class UIManager {
 		return this.#manager;
 	}
 
-	#desableAll() {
-		this.gameManager.gameBoard.fullBoard().forEach((boardCell) => {
-			const placeholder = this.uiBoard.getPlaceholder(boardCell.pos);
-			placeholder.set({ state: "disabled" });
-		});
-		this.gameManager.gameBoard.fullBoard().forEach((boardCell) => {
-			boardCell.card?.uiData.set({ state: "locked" });
-		});
-	}
+	/** @param {InteractivitySelector} intSelector */
+	#processSetUIState(intSelector) {
+		const state = intSelector.state == "enabled";
+		/** @type {import("../card/cardUI.js").cardState} */
+		const cardState = state ? "ready" : "locked";
+		/** @type {import("./uiBoard.js").PCEState} */
+		const pceState = state ? "enabled" : "disabled";
 
-	/** @param {InputTargetType} targetType */
-	setInteractive(targetType) {
-		this.#desableAll();
-
-		switch (targetType) {
-			case "ALLY_CARD":
-				this.gameManager.gameBoard.allySide().forEach((boardCell) => {
-					boardCell.card?.uiData.set({ state: "ready" });
-				});
-				break;
-
-			case "ENEMY_CARD":
-				this.gameManager.gameBoard.enemySide().forEach((boardCell) => {
-					boardCell.card?.uiData.set({ state: "ready" });
-				});
-				break;
-
-			case "ANY_CARD":
-				this.gameManager.gameBoard.fullBoard().forEach((boardCell) => {
-					boardCell.card?.uiData.set({ state: "ready" });
-				});
-				break;
-
-			case "ALLY_SIDE":
-				this.gameManager.gameBoard.allySide().forEach((boardCell) => {
-					if (boardCell.card == null) {
-						const placeholder = this.uiBoard.getPlaceholder(boardCell.pos);
-						placeholder.set({ state: "enabled" });
-					}
-				});
-				break;
-
-			case "ENEMY_SIDE":
-				this.gameManager.gameBoard.enemySide().forEach((boardCell) => {
-					if (boardCell.card == null) {
-						const placeholder = this.uiBoard.getPlaceholder(boardCell.pos);
-						placeholder.set({ state: "enabled" });
-					}
-				});
-				break;
-
-			case "ANY_SIDE":
-				this.gameManager.gameBoard.fullBoard().forEach((boardCell) => {
-					if (boardCell.card == null) {
-						const placeholder = this.uiBoard.getPlaceholder(boardCell.pos);
-						placeholder.set({ state: "enabled" });
-					}
-				});
-				break;
+		if (intSelector.area == "HAND_CARDS") {
+			if (this.player == null) throw new Error("Player is not bound");
+			const hand = this.player.hand;
+			if (intSelector.player == "ALLY") hand.forEach((card) => card.uiData.set({ state: cardState }));
 		}
+
+		const gBoard = this.gameManager.gameBoard;
+
+		/** @type {BoardCell[]} */
+		let boardPart = [];
+		if (intSelector.player == "ALLY") boardPart = gBoard.allySide();
+		if (intSelector.player == "ENEMY") boardPart = gBoard.enemySide();
+
+		/** @type {(boardCell: BoardCell) => void} */
+		let handler = (_) => {};
+		if (intSelector.area == "BOARD_CARDS")
+			handler = (bC) => {
+				bC.card?.uiData.set({ state: cardState });
+			};
+		if (intSelector.area == "PLACEHOLDERS")
+			handler = (bC) => {
+				if (bC.card == null) {
+					this.uiBoard.getPlaceholder(bC.pos).set({ state: pceState });
+				}
+			};
+		boardPart.forEach(handler);
 	}
 
-	/** @param {CardBase} card */
-	selectInputCard(card) {
-		this.setInteractive(card.inputTargetType);
-		card.uiData.set({ state: "selected" });
+	/** @param {InteractivitySelector[]} interactivitySelectors */
+	setUIState(interactivitySelectors) {
+		interactivitySelectors.forEach((IS) => this.#processSetUIState(IS));
+	}
+
+	lockGUI() {
+		const event = new GUIEvent(GEventTypes.LOCK_GUI, this.gameManager, this);
+		this.gameManager.eventSystem.dispatch(event);
+	}
+
+	unlockGUI() {
+		const event = new GUIEvent(GEventTypes.UNLOCK_GUI, this.gameManager, this);
+		this.gameManager.eventSystem.dispatch(event);
+	}
+
+	/** @param {CardBase<T>} card */
+	setInputCard(card) {
+		this.clearInputCard();
 		this.selectedInputCard = card;
+		card.uiData.set({ state: "selected" });
 	}
 
-	deselectInputCard() {
-		this.setInteractive("NONE");
+	clearInputCard() {
 		this.selectedInputCard = null;
 	}
 
@@ -135,7 +146,8 @@ export class UIManager {
 	}
 
 	updateHandUI() {
-		const hand = this.gameManager.player.hand;
+		if (this.player == null) throw new Error("Game Manager is not bound");
+		const hand = this.player.hand;
 		hand.forEach((card) => {
 			const handLengthM_1 = hand.length - 1;
 			const inHandIndex = hand.indexOf(card);
@@ -150,30 +162,71 @@ export class UIManager {
 		this.updateUI();
 	}
 
-	/** @type {GEV_Listener<"CARD_MOVE">} */
+	/** @param {LockGUIevent} event  */
+	evGLockGUIevent(event) {
+		this.setUIState(commonIS.offAll);
+		this.uiBoard.boardSelector?.set({ state: "disabled" });
+	}
+
+	/** @param {UnlockGUIevent} event  */
+	evGUnlockGUIevent(event) {
+		this.setUIState(commonIS.onAllyCards);
+	}
+
+	/** @param {CardSwapGEvent} event */
+	evGCardSwap(event) {
+		const card1 = event.source;
+		const card2 = event.destination;
+
+		this.uiBoard.boardSelector?.set({ state: "disabled" });
+		this.clearInputCard();
+
+		this.gameManager.gameBoard.swapCards(card1, card2);
+
+		const unlockGUIEvent = new GUIEvent(GEventTypes.UNLOCK_GUI, this.gameManager, this);
+		this.gameManager.eventSystem.dispatch(unlockGUIEvent);
+	}
+
+	/** @param {CardMoveGEvent} event */
 	evGCardMove(event) {
-		const card = event.payload.card;
-		const dest = event.payload.to;
-		if (event.payload.from == "hand") {
-			this.uiBoard.boardSelector?.set({ state: "disabled" });
-			this.deselectInputCard();
-			card.boundPlayer?.removeFromHand(card);
+		const card = event.card;
+		const dest = event.destination;
 
-			const boundingRect = card.uiData.container.getBoundingClientRect();
-			const pos = new _v(boundingRect.x + boundingRect.width / 2, boundingRect.y + boundingRect.height / 2);
+		this.uiBoard.boardSelector?.set({ state: "disabled" });
+		this.clearInputCard();
 
-			this.boardDiv.appendChild(card.container);
-			card.uiData.set({
-				position: pos,
-			});
-		}
+		this.lockGUI();
+
+		this.gameManager.gameBoard.placeCard(card, dest);
+
+		const unlockGUIEvent = new GUIEvent(GEventTypes.UNLOCK_GUI, this.gameManager, this);
+		this.gameManager.eventSystem.dispatch(unlockGUIEvent);
+	}
+
+	/** @param {CardPlaceGEvent} event */
+	evGCardPlace(event) {
+		const card = event.card;
+		const dest = event.destination;
+
+		this.uiBoard.boardSelector?.set({ state: "disabled" });
+		this.clearInputCard();
+		this.setUIState(commonIS.offAll);
+
+		event.source.removeFromHand(card);
+		const boundingRect = card.uiData.container.getBoundingClientRect();
+		const pos = new _v(boundingRect.x + boundingRect.width / 2, boundingRect.y + boundingRect.height / 2);
+		this.boardDiv.appendChild(card.container);
+		card.uiData.set({
+			position: pos,
+		});
+
 		this.gameManager.gameBoard.placeCard(card, dest);
 		this.updateHandUI();
 	}
 
-	/** @type {GEV_Listener<"CARD_DRAW_AFTER">} */
-	evGCardDrawn(event) {
-		const card = event.payload.drawnCard;
+	/** @param {CardInteractionGEvent<typeof GEventTypes.CARD_DRAW>} event */
+	evGCardDraw(event) {
+		const card = event.card;
 		card.uiData.set({ positioning: "none" });
 		card.container.style.setProperty("left", "5%");
 		card.container.style.setProperty("top", "50%");
@@ -189,25 +242,13 @@ export class UIManager {
 		}, 100);
 	}
 
-	/** @type {GEV_Listener<"HAND_DRAW_AFTER">} */
-	evGHandDrawn(event) {
-		const hand = event.payload.player.hand;
-
-		hand.forEach((card) => {
-			card.uiData.set({ state: "ready" });
-		});
-	}
-
-	/** @type {GEV_Listener<"HAND_DISCARD_AFTER">} */
-	evGHandDiscarded(event) {
-		console.log("hand discarded");		
-	}
-
-	/** @type {GEV_Listener<"CARD_DISCARD_AFTER">} */
+	/** @type {GEventListener<typeof GEventTypes.CARD_DISCARD>}  */
 	evGCardDiscarded(event) {
-		const card = event.payload.discardedCard;
+		const card = event.card;
 
-		if (card === this.selectedInputCard) this.deselectInputCard();
+		if (card === this.selectedInputCard) {
+			this.clearInputCard();
+		}
 
 		card.container.style.setProperty("left", "95%");
 		card.container.style.setProperty("top", "50%");
@@ -221,5 +262,19 @@ export class UIManager {
 			card.container.style.removeProperty("top");
 			card.container.style.removeProperty("pointer-events");
 		}, 200);
+	}
+
+	/** @param {PlayerGEvent<typeof GEventTypes.HAND_DRAW>} event */
+	evGHandDraw(event) {
+		const hand = event.player.hand;
+
+		hand.forEach((card) => {
+			card.uiData.set({ state: "ready" });
+		});
+	}
+
+	/** @param {PlayerGEvent<typeof GEventTypes.HAND_DISCARD>} event */
+	evGHandDiscard(event) {
+		console.log("hand discarded");
 	}
 }
