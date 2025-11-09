@@ -1,7 +1,7 @@
-import { GEventTypes, GUIEvent } from "./event/index.js";
 import { _v } from "./libs/_v.js";
 import { GameManager } from "./manager/gameManager.js";
 import { UIManager } from "./manager/uiManager.js";
+import { UnlockGUIevent } from "./event/index.js";
 
 import { getSoliderPreset } from "./player/presets.js";
 
@@ -31,18 +31,8 @@ leftButton.addEventListener("click", () => {
 });
 
 rightButton.addEventListener("click", () => {
-	const uiMgr_ = mgr.getUIManager("ally")
-	mgr.eventSystem.dispatch(new GUIEvent(GEventTypes.UNLOCK_GUI, mgr, uiMgr_))
-	// mgr.player.discardHand();
-	// /** @type {InteractivitySelector} */
-	// const ITT = { player: "ALLY", area: "FULL", state: "enabled" };
-	// mgr.getUIManager.setUIState(ITT);
-	// const a = mgr.gameBoard.allySide().forEach((bc) => {
-	// 	if (bc.card != null) {
-	// 		const np = new BoardPos(bc.pos.col - 1, bc.pos.row);
-	// 		mgr.gameBoard.placeCard(bc.card, np);
-	// 	}
-	// });
+	const uiMgr_ = mgr.getUIManager("ally");
+	mgr.eventSystem.dispatch(new UnlockGUIevent(mgr, uiMgr_));
 });
 
 mgr.run();

@@ -1,11 +1,11 @@
 import { methodBind } from "../../libs/utils.js";
-import { GameManager } from "../../manager/gameManager.js";
-import { CardEntity } from "../cardEntity.js";
+import { commonIS } from "../../manager/helperUtils.js";
 import { ComponentTriggerCounter } from "../../component/triggerTypes/componentTriggerCounter.js";
 import { ComponentHealthOrganic } from "../../component/healthTypes/componentHealthOrganic.js";
 import { CardTickGEvent } from "../../event/eventTypes/cardTickEvent.js";
-import { GEventTypes } from "../../event/eventSystem.js";
-import { commonIS } from "../../manager/helperUtils.js";
+import { GameManager } from "../../manager/gameManager.js";
+import { CardEntity } from "../cardEntity.js";
+import { GEventTypes } from "../../event/eventBase.js";
 
 /** @type {spriteInitValues} */
 const SOLIDER_SPRITE_VALUES = {

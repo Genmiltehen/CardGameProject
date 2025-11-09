@@ -1,6 +1,6 @@
+import { ComponentBase } from "../componentBase.js";
 import { clamp, methodBind } from "../../libs/utils.js";
 import { CardBase } from "../../card/cardBase.js";
-import { ComponentBase } from "../componentBase.js";
 
 export class ComponentHealthBase extends ComponentBase {
 	/** @type {number} */

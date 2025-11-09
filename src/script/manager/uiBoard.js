@@ -1,7 +1,6 @@
 import { _v, BoardPos, createElement, methodBind } from "../libs/index.js";
 import { CardMoveGEvent, CardPlaceGEvent } from "../event/index.js";
 import { CardEntity, CardUI } from "../card/index.js";
-import { UIManager } from "./uiManager.js";
 
 /** @typedef {"disabled" | "enabled" | "selected"} PCEState */
 

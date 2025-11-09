@@ -1,7 +1,8 @@
-import { CardTickGEvent, ManagerGEvent, PlayerGEvent, CardEventSystem, GEventTypes } from "../event/index.js";
 import { _v, BoardPos, methodBind } from "../libs/index.js";
-import { PlayerFighter } from "../player/playerFighter.js";
+import { GEventTypes } from "../event/eventBase.js";
 import { GameBoard } from "./gameBoard.js";
+import { PlayerFighter } from "../player/playerFighter.js";
+import { CardTickGEvent, GEventSystem, RequesPlayerActionGEvent, StartGEvent } from "../event/index.js";
 
 const BOARD_SIZE = new BoardPos(6, 2);
 
@@ -10,7 +11,7 @@ export class GameManager {
 	#uiManagers;
 	/** @type {GameBoard} */
 	gameBoard;
-	/** @type {CardEventSystem} */
+	/** @type {GEventSystem} */
 	eventSystem;
 
 	/** @type {{ [PID in PlayerID]: PlayerFighter<PID> }} */
@@ -25,7 +26,7 @@ export class GameManager {
 	constructor(playerData) {
 		methodBind(this, "ev");
 		this.gameBoard = new GameBoard(this, BOARD_SIZE);
-		this.eventSystem = new CardEventSystem();
+		this.eventSystem = new GEventSystem();
 		this.#uiManagers = { ally: null, enemy: null };
 
 		this.state = "NONE";
@@ -38,13 +39,13 @@ export class GameManager {
 		this.#setupEvents();
 	}
 
-	/** 
-	 * @template {PlayerID} T 
-	 * @param {T} playerId 
+	/**
+	 * @template {PlayerID} T
+	 * @param {T} playerId
 	 * @returns {PlayerFighter<T>}
 	 */
 	getPlayer(playerId) {
-		return this.players[playerId]
+		return this.players[playerId];
 	}
 
 	/**
@@ -72,11 +73,12 @@ export class GameManager {
 	#setupEvents() {
 		this.eventSystem.addListener(GEventTypes.START, this.evGStart);
 		this.eventSystem.addListener(GEventTypes.BOARD_TICK, this.evGTickBoard);
+
 		this.eventSystem.addListener(GEventTypes.REQUEST_PLAYER_ACTION, this.evGPlayerActionStart);
 	}
 
 	run() {
-		const event = new ManagerGEvent(GEventTypes.START, this);
+		const event = new StartGEvent(this);
 		this.eventSystem.dispatch(event);
 	}
 
@@ -84,7 +86,7 @@ export class GameManager {
 	evGStart(event) {
 		this.players.ally.drawHand(1);
 
-		const eventPlayerActionStart = new PlayerGEvent(GEventTypes.REQUEST_PLAYER_ACTION, this.players.ally);
+		const eventPlayerActionStart = new RequesPlayerActionGEvent(this.players.ally);
 		this.eventSystem.dispatch(eventPlayerActionStart);
 	}
 

@@ -15,7 +15,7 @@
 /** @typedef {import("./gameManager.js").GameManager} GameManager */
 /** @typedef {import("./gameBoard.js").GameBoard} GameBoard */
 /** @typedef {import("./uiBoard.js").UIBoard} UIBoard */
-/** @typedef {import("../event/eventSystem.js").CardEventSystem} CardEventSystem */
+/** @typedef {import("../event/eventSystem.js").GEventSystem} CardEventSystem */
 
 /* -------------------------------------------------------------------------- */
 /*                                   DEFINES                                  */

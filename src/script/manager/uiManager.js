@@ -1,4 +1,4 @@
-import { GEventTypes } from "../event/eventSystem.js";
+import { GEventTypes } from "../event/eventBase.js";
 import { GUIEvent } from "../event/index.js";
 import { _v } from "../libs/_v.js";
 import { methodBind } from "../libs/utils.js";
@@ -66,7 +66,7 @@ export class UIManager {
 		this.#manager.eventSystem.addListener(GEventTypes.CARD_DRAW, this.evGCardDraw);
 		this.#manager.eventSystem.addListener(GEventTypes.CARD_DISCARD, this.evGCardDiscarded);
 
-		this.#manager.eventSystem.addListener(GEventTypes.HAND_DRAW, this.evGHandDraw);
+		this.#manager.eventSystem.addListener(GEventTypes.HAND_DRAW_, this.evGHandDraw);
 		this.#manager.eventSystem.addListener(GEventTypes.HAND_DISCARD, this.evGHandDiscard);
 
 		this.uiBoard.init();
@@ -224,7 +224,7 @@ export class UIManager {
 		this.updateHandUI();
 	}
 
-	/** @param {CardInteractionGEvent<typeof GEventTypes.CARD_DRAW>} event */
+	/** @param {CardDrawGEvent} event */
 	evGCardDraw(event) {
 		const card = event.card;
 		card.uiData.set({ positioning: "none" });
@@ -242,7 +242,7 @@ export class UIManager {
 		}, 100);
 	}
 
-	/** @type {GEventListener<typeof GEventTypes.CARD_DISCARD>}  */
+	/** @param {CardDiscardGEvent} event  */
 	evGCardDiscarded(event) {
 		const card = event.card;
 
@@ -264,7 +264,7 @@ export class UIManager {
 		}, 200);
 	}
 
-	/** @param {PlayerGEvent<typeof GEventTypes.HAND_DRAW>} event */
+	/** @param {HandDrawGEvent} event */
 	evGHandDraw(event) {
 		const hand = event.player.hand;
 
@@ -273,7 +273,7 @@ export class UIManager {
 		});
 	}
 
-	/** @param {PlayerGEvent<typeof GEventTypes.HAND_DISCARD>} event */
+	/** @param {HandDiscardGEvent} event */
 	evGHandDiscard(event) {
 		console.log("hand discarded");
 	}

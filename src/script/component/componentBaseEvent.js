@@ -1,4 +1,4 @@
-import { BaseGEvent, GEventTypes } from "../event/index.js";
+import { BaseGEvent, GEventTypes } from "../event/eventBase.js";
 
 /**
  * @typedef {Subset<GEventKey, [

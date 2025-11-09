@@ -1,4 +1,4 @@
-import { BaseGEvent } from "../../eventSystem.js";
+import { BaseGEvent, GEventTypes } from "../../eventBase.js";
 
 /**
  * @template {GEventKey} T
@@ -16,5 +16,21 @@ export class ManagerGEvent extends BaseGEvent {
 		super(type);
 		this.gameManager = gameManager;
 		this.gameBoard = gameManager.gameBoard;
+	}
+}
+
+/** @extends ManagerGEvent<typeof GEventTypes.START> */
+export class StartGEvent extends ManagerGEvent {
+	/** @param {GameManager} gameManager */
+	constructor(gameManager) {
+		super(GEventTypes.START, gameManager);
+	}
+}
+
+/** @extends ManagerGEvent<typeof GEventTypes.BOARD_TICK> */
+export class BoardTickGEvent extends ManagerGEvent {
+	/** @param {GameManager} gameManager */
+	constructor(gameManager) {
+		super(GEventTypes.BOARD_TICK, gameManager);
 	}
 }

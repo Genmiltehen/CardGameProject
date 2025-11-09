@@ -1,4 +1,4 @@
-import { GEventTypes } from "../../event/index.js";
+import { GEventTypes } from "../../event/eventBase.js";
 import { ComponentBGEvent } from "../componentBaseEvent.js";
 
 /**

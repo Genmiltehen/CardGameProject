@@ -1,5 +1,3 @@
-import { clamp } from "./utils.js";
-
 export class _v {
 	static PI2 = Math.PI * 2;
 	static radToDeg = 180 / Math.PI;
@@ -8,7 +6,6 @@ export class _v {
 	/**
 	 * @param {Number} x
 	 * @param {Number} y
-	 * @returns {_v}
 	 */
 	constructor(x, y) {
 		this.x = x !== undefined ? x : 0;
@@ -55,19 +52,6 @@ export class _v {
 
 	static fromArray(arr) {
 		return new _v(arr[0], arr[1]);
-	}
-
-	/**
-	 *
-	 * @param {_v} _v1
-	 * @param {_v} _v2
-	 * @param {Number} val
-	 * @param {Boolean} clamp_
-	 * @returns
-	 */
-	static lerp(_v1, _v2, val, clamp_ = true) {
-		if (clamp_) val = clamp(val, 0, 1);
-		return _v1.mulScalar(1 - val).add(_v2.mulScalar(val));
 	}
 
 	clone() {

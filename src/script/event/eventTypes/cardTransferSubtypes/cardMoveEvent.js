@@ -1,9 +1,7 @@
-import { GEventTypes } from "../../eventSystem.js";
+import { GEventTypes } from "../../eventBase.js";
 import { CardTransferGEvent } from "./cardTransferEvent.js";
 
-/**
- * @extends CardTransferGEvent<"CARD_TRANSFER_MOVE">
- */
+/** @extends CardTransferGEvent<typeof GEventTypes.CARD_TRANSFER_MOVE> */
 export class CardMoveGEvent extends CardTransferGEvent {
 	/**
 	 * @param {CardEntity} card

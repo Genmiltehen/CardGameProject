@@ -1,8 +1,7 @@
-import { CardMoveGEvent, CardSwapGEvent, GEventTypes, GUIEvent } from "../event/index.js";
+import { CardSwapGEvent } from "../event/index.js";
 import { _v, createElement, methodBind, RGBtoCssStr } from "../libs/index.js";
 import { Sprite } from "../libs/ui/Sprite/Sprite.js";
 import { commonIS } from "../manager/helperUtils.js";
-import { CardBase } from "./cardBase.js";
 import { CardEntity } from "./cardEntity.js";
 
 /** @typedef {"none"|"fixed"|"hand"} cardPositioning */

@@ -1,4 +1,4 @@
-import { GEventTypes } from "../../eventSystem.js";
+import { GEventTypes } from "../../eventBase.js";
 import { CardInteractionGEvent } from "../cardInteractionEvent.js";
 
 /**

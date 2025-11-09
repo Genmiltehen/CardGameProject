@@ -1,5 +1,4 @@
-import { CardInteractionGEvent, PlayerGEvent } from "../event/index.js";
-import { GEventTypes } from "../event/eventSystem.js";
+import { CardDiscardGEvent, CardDrawGEvent, HandDiscardGEvent, HandDrawGEvent } from "../event/index.js";
 import { methodBind, shuffleArray } from "../libs/utils.js";
 
 /** @template {PlayerID} T */
@@ -51,7 +50,7 @@ export class PlayerFighter {
 			this.discardPile.push(card);
 		});
 	}
-	
+
 	//TODO: leave it be, (probably not finished)
 
 	draw() {
@@ -62,7 +61,7 @@ export class PlayerFighter {
 
 		this.hand.push(card);
 
-		const event = new CardInteractionGEvent(GEventTypes.CARD_DRAW, card, this);
+		const event = new CardDrawGEvent(card, this);
 		this.manager.eventSystem.dispatch(event);
 	}
 
@@ -75,7 +74,7 @@ export class PlayerFighter {
 			this.draw();
 			window.setTimeout(this.__drawTimeout, time, cardNumber - 1, time);
 		} else {
-			const event = new PlayerGEvent(GEventTypes.HAND_DRAW, this);
+			const event = new HandDrawGEvent(this);
 			this.manager.eventSystem.dispatch(event);
 		}
 	}
@@ -99,7 +98,7 @@ export class PlayerFighter {
 		this.removeFromHand(card);
 		this.discardPile.push(card);
 
-		const event = new CardInteractionGEvent(GEventTypes.CARD_DISCARD, card, this);
+		const event = new CardDiscardGEvent(card, this);
 		this.manager.eventSystem.dispatch(event);
 	}
 
@@ -111,7 +110,7 @@ export class PlayerFighter {
 			this.discard(card);
 			window.setTimeout(this.__discardTimeout, time, time);
 		} else {
-			const event = new PlayerGEvent(GEventTypes.HAND_DISCARD, this);
+			const event = new HandDiscardGEvent(this);
 			this.manager.eventSystem.dispatch(event);
 		}
 	}

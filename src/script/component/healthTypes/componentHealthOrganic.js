@@ -1,7 +1,7 @@
+import { ComponentHealthBase } from "./componentHealthBase.js";
 import { ProgressBar } from "../../libs/ui/progressBar/progressBar.js";
 import { createElement, methodBind } from "../../libs/index.js";
 import { CardBase } from "../../card/cardBase.js";
-import { ComponentHealthBase } from "./componentHealthBase.js";
 
 export class ComponentHealthOrganic extends ComponentHealthBase {
 	/** @type {HTMLDivElement} */

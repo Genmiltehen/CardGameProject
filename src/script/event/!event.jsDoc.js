@@ -2,8 +2,6 @@
 
 /** @typedef {import("./eventSystem.js").GEventKey} GEventKey */
 
-/** @typedef {import("./eventSystem.js").GEventMap} GEventMap */
-
 /**
  * @template {GEventKey} T
  * @typedef {import("./eventSystem.js").GEventListener<T>} GEventListener
@@ -15,16 +13,24 @@
 
 /** @typedef {import("./eventTypes/cardTickEvent.js").CardTickGEvent} CardTickGEvent */
 
+/* ------------------------------ PLAYER EVENTS ----------------------------- */
 /**
  * @template {GEventKey} T
  * @typedef {import("./eventTypes/playerEvent.js").PlayerGEvent<T>} PlayerGEvent
  */
+/** @typedef {import("./eventTypes/playerEvent.js").HandDrawGEvent} HandDrawGEvent */
+/** @typedef {import("./eventTypes/playerEvent.js").HandDiscardGEvent} HandDiscardGEvent */
+/** @typedef {import("./eventTypes/playerEvent.js").RequesPlayerActionGEvent} RequesPlayerActionGEvent */
 
+/* ------------------------- CARD INTERCATION EVENT ------------------------- */
 /**
  * @template {GEventKey} T
  * @typedef {import("./eventTypes/cardInteractionEvent.js").CardInteractionGEvent<T>} CardInteractionGEvent
  */
+/** @typedef {import("./eventTypes/cardInteractionEvent.js").CardDrawGEvent} CardDrawGEvent */
+/** @typedef {import("./eventTypes/cardInteractionEvent.js").CardDiscardGEvent} CardDiscardGEvent */
 
+/* -------------------------- CARD TRANSFER EVENTS -------------------------- */
 /**
  * @template {GEventKey} T
  * @typedef {import("./eventTypes/cardTransferSubtypes/cardTransferEvent.js").CardTransferGEvent<T>} CardTransferGEvent
@@ -33,29 +39,18 @@
 /** @typedef {import("./eventTypes/cardTransferSubtypes/cardMoveEvent.js").CardMoveGEvent} CardMoveGEvent */
 /** @typedef {import("./eventTypes/cardTransferSubtypes/cardSwapEvent.js").CardSwapGEvent} CardSwapGEvent */
 
+/* ----------------------------- MANAGER EVENTS ----------------------------- */
 /**
  * @template {GEventKey} T
  * @typedef {import("./eventTypes/managerSubtypes/managerEvent.js").ManagerGEvent<T>} ManagerGEvent
  */
+/** @typedef {import("./eventTypes/managerSubtypes/managerEvent.js").StartGEvent} StartGEvent */
+/** @typedef {import("./eventTypes/managerSubtypes/managerEvent.js").BoardTickGEvent} BoardTickGEvent */
 
+/* ------------------------------- GUI EVENTS ------------------------------- */
 /**
  * @template {GEventKey} T
  * @typedef {import("./eventTypes/managerSubtypes/guiEvent.js").GUIEvent<T>} GUIEvent
  */
-
-/* -------------------------------------------------------------------------- */
-/*                               DERIVED EVENTS                               */
-/* -------------------------------------------------------------------------- */
-
-/** @typedef {PlayerGEvent<"HAND_DRAW">} HandDrawGEvent */
-/** @typedef {PlayerGEvent<"HAND_DISCARD">} HandDiscardGEvent */
-/** @typedef {PlayerGEvent<"REQUEST_PLAYER_ACTION">} RequesPlayerActionGEvent */
-
-/** @typedef {CardInteractionGEvent<"CARD_DRAW">} CardDrawGEvent */
-/** @typedef {CardInteractionGEvent<"CARD_DISCARD">} CardDiscardGEvent */
-
-/** @typedef {ManagerGEvent<"START">} StartGEvent */
-/** @typedef {ManagerGEvent<"BOARD_TICK">} BoardTickGEvent */
-
-/** @typedef {GUIEvent<"LOCK_GUI">} LockGUIevent */
-/** @typedef {GUIEvent<"UNLOCK_GUI">} UnlockGUIevent */
+/** @typedef {import("./eventTypes/managerSubtypes/guiEvent.js").LockGUIevent} LockGUIevent */
+/** @typedef {import("./eventTypes/managerSubtypes/guiEvent.js").UnlockGUIevent} UnlockGUIevent */

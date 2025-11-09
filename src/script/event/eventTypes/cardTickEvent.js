@@ -1,8 +1,6 @@
-import { BaseGEvent } from "../eventSystem.js";
+import { BaseGEvent, GEventTypes } from "../eventBase.js";
 
-/**
- * @extends BaseGEvent<"CARD_TICK">
- */
+/** @extends BaseGEvent<typeof GEventTypes.CARD_TICK> */
 export class CardTickGEvent extends BaseGEvent {
 	/** @type {BoardPos} */ pos;
 	/** @type {CardEntity} */ target;
@@ -12,7 +10,7 @@ export class CardTickGEvent extends BaseGEvent {
 	 * @param {CardEntity} card
 	 */
 	constructor(pos, card) {
-		super("CARD_TICK");
+		super(GEventTypes.CARD_TICK);
 		this.pos = pos;
 		this.target = card;
 	}
